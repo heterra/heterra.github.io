@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heterra: Advanced spatial analysis. One lightweight GIS app.</title>
+<meta name="description" content="Heterra is free, lightweight software for exploring spatial heterogeneity, uncovering patterns, building predictions, and evaluating models—with interactive maps, charts, and guided tutorials for every method.">
+<meta property="og:title" content="Heterra: Advanced spatial analysis. One lightweight GIS app.">
+<meta property="og:description" content="Nine spatial analysis methods with maps, charts and tutorials, checked against their R reference implementations.">
+<meta property="og:image" content="https://heterra.github.io/assets/screenshot-map.png">
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="#methods"><span lang="en">Methods</span><span lang="zh">方法</span></a>
+      <a href="#download"><span lang="en">Download</span><span lang="zh">下载</span></a>
+      <a href="#cite"><span lang="en">Cite</span><span lang="zh">引用</span></a>
+      <a href="https://github.com/heterra">GitHub</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-set="en">EN</button>
+      <button type="button" data-set="zh">中</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="hero">
+  <div class="wrap">
+    <p class="hero-name"><img src="assets/icon.png" alt="">Heterra</p>
+    <h1 lang="en">Advanced spatial analysis. One lightweight GIS app.</h1>
+    <h1 lang="zh">先进的空间分析,一个轻量的 GIS 应用。</h1>
+    <p class="lead" lang="en">Heterra is free, lightweight software for exploring spatial heterogeneity, uncovering patterns, building predictions, and evaluating models—with interactive maps, charts, and guided tutorials for every method.</p>
+    <p class="lead" lang="zh">Heterra 是免费、轻量的软件,用于探索空间异质性、发现空间模式、构建预测和评估模型,每个方法都配有交互式地图、统计图和引导式教程。</p>
+    <a class="button" href="#download"><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
+    <p class="small" lang="en">Apple silicon · macOS 13 or later · English and 中文</p>
+    <p class="small" lang="zh">Apple 芯片 · macOS 13 或更高 · English 和中文</p>
+    <img class="shot" src="assets/screenshot-map.png" width="1800" height="1125" alt="Heterra's main window showing a map of NDVI change in seven natural-break classes" data-alt-zh="Heterra 主窗口,显示按自然断点分为七级的 NDVI 变化地图">
+  </div>
+</div>
+
+<section>
+  <div class="wrap three">
+    <div>
+      <h3 lang="en">A native Mac app</h3>
+      <h3 lang="zh">原生 Mac 应用</h3>
+      <p lang="en">Open shapefiles, GeoTIFF, GeoPackage, GeoJSON, CSV and File Geodatabase. Style and explore layers, then run a method in the same window, with no R or Python to install.</p>
+      <p lang="zh">可打开 Shapefile、GeoTIFF、GeoPackage、GeoJSON、CSV 和 File Geodatabase。在同一个窗口里设置符号、查看图层、运行方法,不用安装 R 或 Python。</p>
+    </div>
+    <div>
+      <h3 lang="en">Results checked against R</h3>
+      <h3 lang="zh">结果与 R 核对</h3>
+      <p lang="en">Each method is tested against its R reference implementation. Every tutorial compares its results with the reference on your own Mac, and every run can be exported as an R script.</p>
+      <p lang="zh">每个方法都与其 R 参考实现对照测试。教程会在你自己的 Mac 上把结果与参考结果比较,每次运行都可以导出为 R 脚本。</p>
+    </div>
+    <div>
+      <h3 lang="en">Figures ready for papers</h3>
+      <h3 lang="zh">可直接用于论文的图</h3>
+      <p lang="en">Export charts and page layouts as vector PDF and SVG, or as PNG at print resolution, with colours from RColorBrewer. Keep the data behind each chart as CSV.</p>
+      <p lang="zh">统计图和版面可导出为矢量 PDF、SVG,或印刷分辨率的 PNG,颜色来自 RColorBrewer。每张图背后的数据也可以导出为 CSV。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap split">
+    <ul>
+      <li>
+        <h3 lang="en">Set up in steps, run where it counts</h3>
+        <h3 lang="zh">分步设置,需要时才运行</h3>
+        <p lang="en">Each tool walks through its settings one step at a time. Run appears only at the steps that compute something.</p>
+        <p lang="zh">每个工具按步骤设置,只有需要计算的步骤才有运行按钮。</p>
+      </li>
+      <li>
+        <h3 lang="en">A tutorial in every tool</h3>
+        <h3 lang="zh">每个工具都有教程</h3>
+        <p lang="en">Load an example, follow the steps and read the results, with a guide in English and Chinese.</p>
+        <p lang="zh">载入案例,跟着步骤操作并解读结果,手册有中英文。</p>
+      </li>
+      <li>
+        <h3 lang="en">Charts linked to the map</h3>
+        <h3 lang="zh">统计图与地图联动</h3>
+        <p lang="en">Where a chart lists a layer's categories, click one to select its features on the map.</p>
+        <p lang="zh">统计图列出图层的类别时,点击一个类别就能在地图上选中对应要素。</p>
+      </li>
+    </ul>
+    <img class="shot" src="assets/screenshot-dsi.png" width="1800" height="1125" alt="Heterra's Chart page showing the degree of spatial interpretability of five models" data-alt-zh="Heterra 的图表页,显示五个模型的空间解释度">
+  </div>
+</section>
+
+<section id="methods">
+  <div class="wrap">
+    <h2><span lang="en">Methods</span><span lang="zh">方法</span></h2>
+
+    <div class="group">
+      <p class="group-name heterogeneity"><span lang="en">Spatial heterogeneity</span><span lang="zh">空间异质性</span></p>
+      <div class="method">
+        <abbr>OPGD</abbr>
+        <div><strong lang="en">Optimal parameters-based geographical detector</strong><strong lang="zh">最优参数地理探测器</strong>
+          <span class="about" lang="en">Finds the discretization of each continuous factor that best explains y, then runs the factor, interaction, risk and ecological detectors.</span>
+          <span class="about" lang="zh">为每个连续因子寻找最能解释 y 的离散化方案,再运行因子、交互、风险和生态探测。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/15481603.2020.1760434">Song et al. 2020</a><br><a href="https://doi.org/10.1080/13658810802443457">Wang et al. 2010</a></div>
+      </div>
+      <div class="method">
+        <abbr>LISP</abbr>
+        <div><strong lang="en">Local indicator of stratified power</strong><strong lang="zh">局部分层影响</strong>
+          <span class="about" lang="en">The geographical-detector q inside a window around every location, for each variable, variable pairs and all variables together.</span>
+          <span class="about" lang="zh">在每个位置周围的窗口内计算地理探测器 q,分别对单个变量、变量对和全部变量计算。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2024.2437811">Hu et al. 2024</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+      <div class="method">
+        <abbr>GC</abbr>
+        <div><strong lang="en">Geocomplexity</strong><strong lang="zh">地理复杂性</strong>
+          <span class="about" lang="en">How strongly each location departs from the smooth spatial dependence of its neighbourhood, per variable.</span>
+          <span class="about" lang="zh">逐变量衡量每个位置偏离其邻域平滑空间依赖的程度。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2023.2203212">Zhang et al. 2023</a></div>
+      </div>
+      <div class="method">
+        <abbr>SDA</abbr>
+        <div><strong lang="en">Second dimension of spatial association</strong><strong lang="zh">第二维度空间关系</strong>
+          <span class="about" lang="en">Quantiles of each covariate around every sample become new variables; the stable ones are selected and their gain cross-validated.</span>
+          <span class="about" lang="zh">把每个样本周围协变量的分位数变成新变量,选出稳定的变量,并用交叉验证说明精度提高多少。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1016/j.jag.2022.102834">Song 2022</a></div>
+      </div>
+      <div class="method">
+        <abbr>SDO</abbr>
+        <div><strong lang="en">Second-dimension outliers</strong><strong lang="zh">第二维度异常</strong>
+          <span class="about" lang="en">Local outlier strengths of each covariate around every sample become new variables; the stable ones are selected and their gain cross-validated.</span>
+          <span class="about" lang="zh">把每个样本周围协变量的局部异常强度变成新变量,选出稳定的变量,并用交叉验证说明精度提高多少。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2025.2580414">Ren et al. 2026a</a><br><a href="https://doi.org/10.1080/13658816.2026.2682957">Ren et al. 2026b</a><br><a href="https://doi.org/10.1016/j.jag.2022.102834">Song 2022</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name prediction"><span lang="en">Spatial prediction</span><span lang="zh">空间预测</span></p>
+      <div class="method">
+        <abbr>GCF</abbr>
+        <div><strong lang="en">Generalized covariate field</strong><strong lang="zh">广义协变量场</strong>
+          <span class="about" lang="en">Expands covariates into spatial-pattern and neighbourhood-distribution features, selects stable predictors and predicts.</span>
+          <span class="about" lang="zh">把协变量扩展为空间模式与邻域分布特征,选出稳定的预测变量并预测。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2026.2729719">Song 2026</a></div>
+      </div>
+      <div class="method">
+        <abbr>GOS</abbr>
+        <div><strong lang="en">Geographically optimal similarity</strong><strong lang="zh">地理最优相似度</strong>
+          <span class="about" lang="en">Predicts a variable at new locations from the samples whose covariate configuration is most similar, with a prediction uncertainty.</span>
+          <span class="about" lang="zh">用协变量配置最相似的样本预测新位置上的变量,并给出预测不确定性。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1007/s11004-022-10036-8">Song 2022</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name evaluation"><span lang="en">Model evaluation</span><span lang="zh">模型评估</span></p>
+      <div class="method">
+        <abbr>DSI</abbr>
+        <div><strong lang="en">Degree of spatial interpretability</strong><strong lang="zh">空间解释度</strong>
+          <span class="about" lang="en">How much of the spatial autocorrelation and spatial heterogeneity in y each model's residuals no longer carry.</span>
+          <span class="about" lang="zh">衡量每个模型的残差中不再含有 y 的多少空间自相关与空间异质性。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2026.2614335">Liu et al. 2026</a></div>
+      </div>
+      <div class="method">
+        <abbr>SIE</abbr>
+        <div><strong lang="en">Spatial information explained</strong><strong lang="zh">空间信息解释率</strong>
+          <span class="about" lang="en">How much of the spatial information in y a prediction model explains, from out-of-fold predictions.</span>
+          <span class="about" lang="zh">根据交叉验证的样本外预测,衡量模型解释了 y 中多少空间信息。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1016/j.isprsjprs.2026.09.034">Song 2026</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name data"><span lang="en">Data tools</span><span lang="zh">数据工具</span></p>
+      <p class="tools" lang="en">CSV to points · Reproject · Raster to grid table · Join · Field calculator · Clip</p>
+      <p class="tools" lang="zh">CSV 转点 · 重投影 · 栅格转格网表 · 连接 · 字段计算 · 裁剪</p>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap download">
+    <div>
+      <h2><span lang="en">Download</span><span lang="zh">下载</span></h2>
+      <!-- At the first release, replace the span below with:
+           <a class="button" href="https://github.com/heterra/heterra/releases/latest/download/Heterra-arm64.dmg">…</a>
+           and add the version and SHA-256 under it. -->
+      <span class="button off" aria-disabled="true"><span lang="en">Coming soon</span><span lang="zh">即将发布</span></span>
+      <p class="small" lang="en">The first public release is being prepared.</p>
+      <p class="small" lang="zh">第一个公开版本正在准备中。</p>
+    </div>
+    <ul class="notes">
+      <li lang="en"><b>Requirements.</b> A Mac with Apple silicon and macOS 13 or later.</li>
+      <li lang="zh"><b>系统要求。</b>Apple 芯片的 Mac,macOS 13 或更高。</li>
+      <li lang="en"><b>Install.</b> Open the .dmg and drag Heterra to Applications.</li>
+      <li lang="zh"><b>安装。</b>打开 .dmg,把 Heterra 拖到"应用程序"。</li>
+      <li lang="en"><b>First launch.</b> Heterra is not notarised by Apple, so macOS blocks it the first time. Open System Settings → Privacy &amp; Security and choose Open Anyway.</li>
+      <li lang="zh"><b>第一次打开。</b>Heterra 没有经过 Apple 公证,macOS 第一次会拦截。请打开"系统设置 → 隐私与安全性",选择"仍要打开"。</li>
+    </ul>
+  </div>
+</section>
+
+<section id="cite">
+  <div class="wrap">
+    <h2><span lang="en">Cite</span><span lang="zh">引用</span></h2>
+    <p class="cite">Song, Y. (2026) Heterra [software]. https://heterra.github.io</p>
+    <p class="after-cite" lang="en">Please also cite the paper of each method you use, linked above. Heterra shows the full reference in every tool's panel.</p>
+    <p class="after-cite" lang="zh">也请引用你所用方法的论文(链接见上)。每个工具的面板里都有完整的文献信息。</p>
+  </div>
+</section>
+
+<section id="feedback">
+  <div class="wrap">
+    <h2><span lang="en">Feedback</span><span lang="zh">反馈</span></h2>
+    <p class="cite" lang="en">If you have any suggestions, comments or questions, please email <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>.</p>
+    <p class="cite" lang="zh">如有任何建议、意见或问题,请发邮件到 <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>。</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p lang="en">© 2026 Yongze Song. Software: GNU GPL 3.0 or later. Documentation and tutorial data: CC BY 4.0.</p>
+    <p lang="zh">© 2026 Yongze Song。软件:GNU GPL 第 3 版或更高。文档和教程数据:CC BY 4.0。</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var titles = { en: "Heterra: Advanced spatial analysis. One lightweight GIS app.", zh: "Heterra:先进的空间分析,一个轻量的 GIS 应用" };
+  var images = Array.prototype.slice.call(document.querySelectorAll("img[data-alt-zh]"));
+  images.forEach(function (i) { i.setAttribute("data-alt-en", i.alt); });
+  function set(code) {
+    var root = document.documentElement;
+    root.setAttribute("data-lang", code);
+    root.lang = code === "zh" ? "zh-CN" : "en";
+    document.title = titles[code];
+    images.forEach(function (i) { i.alt = i.getAttribute("data-alt-" + code); });
+  }
+  var saved = null;
+  try { saved = localStorage.getItem("lang"); } catch (e) {}
+  var asked = new URLSearchParams(location.search).get("lang");
+  var browser = (navigator.language || "").toLowerCase().indexOf("zh") === 0 ? "zh" : "en";
+  set(asked === "zh" || asked === "en" ? asked : saved || browser);
+  document.querySelectorAll(".lang button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var code = b.getAttribute("data-set");
+      set(code);
+      try { localStorage.setItem("lang", code); } catch (e) {}
+    });
+  });
+})();
+</script>
+</body>
+</html>
