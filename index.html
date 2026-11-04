@@ -7,7 +7,7 @@
 <meta name="description" content="Heterra is free, lightweight software for exploring spatial heterogeneity, uncovering patterns, building predictions, and evaluating models—with interactive maps, charts, and guided tutorials for every method.">
 <meta property="og:title" content="Heterra: Advanced spatial analysis. One lightweight GIS app.">
 <meta property="og:description" content="Nine spatial analysis methods with maps, charts and tutorials, checked against their R reference implementations.">
-<meta property="og:image" content="https://heterra.github.io/assets/screenshot-map.png">
+<meta property="og:image" content="https://heterra.org/assets/shots/en/gcf.jpg">
 <link rel="icon" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,10 +20,11 @@
   <div class="wrap">
     <a class="brand" href="#"><img src="assets/icon.png" alt="">Heterra</a>
     <nav>
+      <a href="#"><span lang="en">Home</span><span lang="zh">首页</span></a>
+      <a href="#results"><span lang="en">Results</span><span lang="zh">结果</span></a>
       <a href="#methods"><span lang="en">Methods</span><span lang="zh">方法</span></a>
       <a href="#download"><span lang="en">Download</span><span lang="zh">下载</span></a>
-      <a href="#cite"><span lang="en">Cite</span><span lang="zh">引用</span></a>
-      <a href="https://github.com/heterra">GitHub</a>
+      <a href="#feedback"><span lang="en">Feedback</span><span lang="zh">反馈</span></a>
     </nav>
     <div class="lang" role="group" aria-label="Language">
       <button type="button" data-set="en">EN</button>
@@ -41,9 +42,12 @@
     <p class="lead" lang="en">Heterra is free, lightweight software for exploring spatial heterogeneity, uncovering patterns, building predictions, and evaluating models—with interactive maps, charts, and guided tutorials for every method.</p>
     <p class="lead" lang="zh">Heterra 是一款免费、轻量的空间分析软件,用于探索空间异质性、发现空间模式、构建预测模型并评估模型表现。每种方法均配有交互式地图、统计图和引导式教程,并可导出适用于学术论文与研究报告的高质量图件。</p>
     <a class="button" href="#download"><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
-    <p class="small" lang="en">Apple silicon · macOS 13 or later · English and 中文</p>
-    <p class="small" lang="zh">Apple 芯片 · macOS 13 或更高 · English 和中文</p>
-    <img class="shot" src="assets/screenshot-map.png" width="1800" height="1125" alt="Heterra's main window showing a map of NDVI change in seven natural-break classes" data-alt-zh="Heterra 主窗口,显示按自然断点分为七级的 NDVI 变化地图">
+    <p class="small" lang="en">Apple silicon · macOS 13 or later</p>
+    <p class="small" lang="zh">Apple 芯片 · macOS 13 或更高</p>
+  </div>
+  <div class="wrap wide">
+    <a class="zoom" lang="en" href="assets/shots/en/gcf.jpg"><img class="shot" src="assets/shots/en/gcf.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the GCF feature figure: selected variables, cross-validated R², prediction map and observed against predicted"></a>
+    <a class="zoom" lang="zh" href="assets/shots/zh/gcf.jpg"><img class="shot" src="assets/shots/zh/gcf.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示 GCF 代表性图:选中的变量、交叉验证 R²、预测图、观测值与预测值"></a>
   </div>
 </div>
 
@@ -58,8 +62,8 @@
     <div>
       <h3 lang="en">Results checked against R</h3>
       <h3 lang="zh">结果与 R 核对</h3>
-      <p lang="en">Each method is tested against its R reference implementation. Every tutorial compares its results with the reference on your own Mac, and every run can be exported as an R script.</p>
-      <p lang="zh">每个方法都与其 R 参考实现对照测试。教程会在你自己的 Mac 上把结果与参考结果比较,每次运行都可以导出为 R 脚本。</p>
+      <p lang="en">Each method is tested against its R reference implementation. Every tutorial compares its results with the reference on your own Mac.</p>
+      <p lang="zh">每个方法都与其 R 参考实现对照测试。教程会在你自己的 Mac 上把结果与参考结果比较。</p>
     </div>
     <div>
       <h3 lang="en">Figures ready for papers</h3>
@@ -70,29 +74,123 @@
   </div>
 </section>
 
-<section>
-  <div class="wrap split">
-    <ul>
-      <li>
-        <h3 lang="en">Set up in steps, run where it counts</h3>
-        <h3 lang="zh">分步设置,需要时才运行</h3>
-        <p lang="en">Each tool walks through its settings one step at a time. Run appears only at the steps that compute something.</p>
-        <p lang="zh">每个工具按步骤设置,只有需要计算的步骤才有运行按钮。</p>
-      </li>
-      <li>
-        <h3 lang="en">A tutorial in every tool</h3>
-        <h3 lang="zh">每个工具都有教程</h3>
-        <p lang="en">Load an example, follow the steps and read the results, with a guide in English and Chinese.</p>
-        <p lang="zh">载入案例,跟着步骤操作并解读结果,手册有中英文。</p>
-      </li>
-      <li>
-        <h3 lang="en">Charts linked to the map</h3>
-        <h3 lang="zh">统计图与地图联动</h3>
-        <p lang="en">Where a chart lists a layer's categories, click one to select its features on the map.</p>
-        <p lang="zh">统计图列出图层的类别时,点击一个类别就能在地图上选中对应要素。</p>
-      </li>
-    </ul>
-    <img class="shot" src="assets/screenshot-dsi.png" width="1800" height="1125" alt="Heterra's Chart page showing the degree of spatial interpretability of five models" data-alt-zh="Heterra 的图表页,显示五个模型的空间解释度">
+<section class="feature">
+  <div class="wrap wide">
+    <h2><span lang="en">The whole result in one figure</span><span lang="zh">一张图看完整个结果</span></h2>
+    <p class="intro" lang="en">When a run ends, its main chart opens. In OPGD, the feature figure brings together the Q curves, optimal breaks, factor detector, risk means, risk map and risk, interaction and ecological detectors, ready to export as PDF, SVG or PNG at 300 dpi.</p>
+    <p class="intro" lang="zh">运行结束后,主要的统计图随即打开。OPGD 的代表性图把 Q 曲线、最优断点、因子探测、风险均值、风险地图以及风险、交互和生态探测放在同一张图里,可导出为 PDF、SVG 或 300 dpi 的 PNG。</p>
+    <a class="zoom" lang="en" href="assets/shots/en/opgd.jpg"><img class="shot" src="assets/shots/en/opgd.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the OPGD feature figure in eight panels"></a>
+    <a class="zoom" lang="zh" href="assets/shots/zh/opgd.jpg"><img class="shot" src="assets/shots/zh/opgd.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示八个分图的 OPGD 代表性图"></a>
+  </div>
+  <div class="wrap wide three after-shot">
+    <div>
+      <h3 lang="en">Set up in steps, run where it counts</h3>
+      <h3 lang="zh">分步设置,需要时才运行</h3>
+      <p lang="en">Each tool walks through its settings one step at a time. Run appears only at the steps that compute something.</p>
+      <p lang="zh">每个工具按步骤设置,只有需要计算的步骤才有运行按钮。</p>
+    </div>
+    <div>
+      <h3 lang="en">A tutorial in every tool</h3>
+      <h3 lang="zh">每个工具都有教程</h3>
+      <p lang="en">Load an example, follow the steps and read the results, with a guide in English and Chinese.</p>
+      <p lang="zh">载入案例,跟着步骤操作并解读结果,手册有中英文。</p>
+    </div>
+    <div>
+      <h3 lang="en">Charts linked to the map</h3>
+      <h3 lang="zh">统计图与地图联动</h3>
+      <p lang="en">Where a chart lists a layer's categories, click one to select its features on the map.</p>
+      <p lang="zh">统计图列出图层的类别时,点击一个类别就能在地图上选中对应要素。</p>
+    </div>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap wide">
+    <h2><span lang="en">Results from every method</span><span lang="zh">每个方法的结果</span></h2>
+    <p class="intro" lang="en">Each screenshot is the result page after running that method's tutorial. Click to enlarge. Several tutorials use simulated data, so the numbers illustrate the tool and do not describe a real study.</p>
+    <p class="intro" lang="zh">每张截图都是运行该方法教程后的结果页面,点击可放大。部分教程使用模拟数据,图中的数字只用于演示软件,不代表真实研究结果。</p>
+    <div class="gallery">
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/opgd.jpg"><img class="shot" src="assets/shots/en/opgd.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the OPGD feature figure in eight panels"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/opgd.jpg"><img class="shot" src="assets/shots/zh/opgd.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示八个分图的 OPGD 代表性图"></a>
+        <figcaption>
+          <p class="group-name heterogeneity"><span lang="en">Spatial heterogeneity</span><span lang="zh">空间异质性</span></p>
+          <p><b>OPGD</b> <span lang="en">The optimal discretisation with the factor, risk, interaction and ecological detectors, in one figure.</span><span lang="zh">最优离散化,以及因子、风险、交互和生态探测结果,都在一张图中。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/lisp.jpg"><img class="shot" src="assets/shots/en/lisp.jpg" width="2000" height="930" loading="lazy" alt="LISP maps of the variable pairs and their significance"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/lisp.jpg"><img class="shot" src="assets/shots/zh/lisp.jpg" width="2000" height="969" loading="lazy" alt="LISP 变量对地图及其显著性"></a>
+        <figcaption>
+          <p class="group-name heterogeneity"><span lang="en">Spatial heterogeneity</span><span lang="zh">空间异质性</span></p>
+          <p><b>LISP</b> <span lang="en">Local power of variable pairs and its significance, at every location.</span><span lang="zh">每个位置上变量对的局部影响及其显著性。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/gc.jpg"><img class="shot" src="assets/shots/en/gc.jpg" width="2000" height="930" loading="lazy" alt="Maps of the GC field of five variables"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/gc.jpg"><img class="shot" src="assets/shots/zh/gc.jpg" width="2000" height="969" loading="lazy" alt="五个变量的 GC 字段地图"></a>
+        <figcaption>
+          <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+          <p><b>GC</b> <span lang="en">The geocomplexity field of each variable, scaled to 0–1.</span><span lang="zh">每个变量的地理复杂性字段,缩放到 0–1。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/sda.jpg"><img class="shot" src="assets/shots/en/sda.jpg" width="2000" height="930" loading="lazy" alt="SDA and baseline prediction maps of soil zinc"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/sda.jpg"><img class="shot" src="assets/shots/zh/sda.jpg" width="2000" height="969" loading="lazy" alt="土壤锌的 SDA 与基线预测图"></a>
+        <figcaption>
+          <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+          <p><b>SDA</b> <span lang="en">Prediction maps with and without the SDA variables.</span><span lang="zh">使用与不使用 SDA 变量的预测图。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/sdo.jpg"><img class="shot" src="assets/shots/en/sdo.jpg" width="2000" height="930" loading="lazy" alt="Bar charts of cross-validated R² with and without the SDO variables"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/sdo.jpg"><img class="shot" src="assets/shots/zh/sdo.jpg" width="2000" height="969" loading="lazy" alt="使用与不使用 SDO 变量的交叉验证 R² 柱状图"></a>
+        <figcaption>
+          <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+          <p><b>SDO</b> <span lang="en">Cross-validated R² with and without the SDO variables.</span><span lang="zh">使用与不使用 SDO 变量的交叉验证 R²。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/gcf.jpg"><img class="shot" src="assets/shots/en/gcf.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the GCF feature figure: selected variables, cross-validated R², prediction map and observed against predicted"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/gcf.jpg"><img class="shot" src="assets/shots/zh/gcf.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示 GCF 代表性图:选中的变量、交叉验证 R²、预测图、观测值与预测值"></a>
+        <figcaption>
+          <p class="group-name prediction"><span lang="en">Spatial prediction</span><span lang="zh">空间预测</span></p>
+          <p><b>GCF</b> <span lang="en">Selected variables, R², the prediction map and observed against predicted, in one figure.</span><span lang="zh">入选变量、R²、预测图,以及观测值与预测值的对比,都在一张图中。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/gos.jpg"><img class="shot" src="assets/shots/en/gos.jpg" width="2000" height="930" loading="lazy" alt="GOS prediction map, uncertainty map and κ–RMSE curve"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/gos.jpg"><img class="shot" src="assets/shots/zh/gos.jpg" width="2000" height="969" loading="lazy" alt="GOS 预测图、不确定性图和 κ–RMSE 曲线"></a>
+        <figcaption>
+          <p class="group-name prediction"><span lang="en">Spatial prediction</span><span lang="zh">空间预测</span></p>
+          <p><b>GOS</b> <span lang="en">Prediction, its uncertainty and the search for the optimal similarity.</span><span lang="zh">预测、预测不确定性,以及最优相似度的搜索曲线。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/dsi.jpg"><img class="shot" src="assets/shots/en/dsi.jpg" width="2000" height="930" loading="lazy" alt="DSI triangles showing the θ range of five models"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/dsi.jpg"><img class="shot" src="assets/shots/zh/dsi.jpg" width="2000" height="969" loading="lazy" alt="显示五个模型 θ 范围的 DSI 三角图"></a>
+        <figcaption>
+          <p class="group-name evaluation"><span lang="en">Model evaluation</span><span lang="zh">模型评估</span></p>
+          <p><b>DSI</b> <span lang="en">The range of θ for five models, ordered by θ₃.</span><span lang="zh">五个模型的 θ 范围,按 θ₃ 排序。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/sie.jpg"><img class="shot" src="assets/shots/en/sie.jpg" width="2000" height="930" loading="lazy" alt="SIE by model, multi-scale SIE, and SIE against R² for ten models with error bars"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/sie.jpg"><img class="shot" src="assets/shots/zh/sie.jpg" width="2000" height="969" loading="lazy" alt="十个模型的 SIE、多尺度 SIE,以及 SIE 与 R² 散点图,含误差线"></a>
+        <figcaption>
+          <p class="group-name evaluation"><span lang="en">Model evaluation</span><span lang="zh">模型评估</span></p>
+          <p><b>SIE</b> <span lang="en">SIE by model, multi-scale SIE, and SIE against R² for ten models, with fold standard errors.</span><span lang="zh">十个模型的 SIE、多尺度 SIE,以及 SIE 与 R²,误差线为折间标准误。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/map.jpg"><img class="shot" src="assets/shots/en/map.jpg" width="2000" height="930" loading="lazy" alt="Heterra's Map page with NDVI change in seven natural-break classes"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/map.jpg"><img class="shot" src="assets/shots/zh/map.jpg" width="2000" height="969" loading="lazy" alt="Heterra 的地图页,显示按自然断点分为七级的 NDVI 变化"></a>
+        <figcaption>
+          <p class="group-name data"><span lang="en">Map</span><span lang="zh">地图</span></p>
+          <p><span lang="en">Style any layer, here in seven natural-break classes.</span><span lang="zh">为任意图层设置符号,这里按自然断点分为七级。</span></p>
+        </figcaption>
+      </figure>
+    </div>
   </div>
 </section>
 
@@ -107,7 +205,7 @@
         <div><strong lang="en">Optimal parameters-based geographical detector</strong><strong lang="zh">最优参数地理探测器</strong>
           <span class="about" lang="en">Finds the discretization of each continuous factor that best explains y, then runs the factor, interaction, risk and ecological detectors.</span>
           <span class="about" lang="zh">为每个连续因子寻找最能解释 y 的离散化方案,再运行因子、交互、风险和生态探测。</span></div>
-        <div class="papers"><a href="https://doi.org/10.1080/15481603.2020.1760434">Song et al. 2020</a><br><a href="https://doi.org/10.1080/13658810802443457">Wang et al. 2010</a></div>
+        <div class="papers"><a href="https://doi.org/10.1080/15481603.2020.1760434">Song et al. 2020</a></div>
       </div>
       <div class="method">
         <abbr>LISP</abbr>
@@ -191,30 +289,38 @@
   <div class="wrap download">
     <div>
       <h2><span lang="en">Download</span><span lang="zh">下载</span></h2>
-      <!-- At the first release, replace the span below with:
-           <a class="button" href="https://github.com/heterra/heterra/releases/latest/download/Heterra-arm64.dmg">…</a>
-           and add the version and SHA-256 under it. -->
-      <span class="button off" aria-disabled="true"><span lang="en">Coming soon</span><span lang="zh">即将发布</span></span>
-      <p class="small" lang="en">The first public release is being prepared.</p>
-      <p class="small" lang="zh">第一个公开版本正在准备中。</p>
+      <!-- At a release, put the dmg in downloads/ and change the link, its data-download and the version below.
+           A click on data-download is counted when gaId is set. -->
+      <a class="button" href="downloads/Heterra-1.3.0-arm64.dmg" download data-download="1.3.0"><span lang="en">Download Heterra 1.3.0</span><span lang="zh">下载 Heterra 1.3.0</span></a>
+      <p class="small" lang="en">Version 1.3.0 · 24 MB · Heterra-1.3.0-arm64.dmg</p>
+      <p class="small" lang="zh">版本 1.3.0 · 24 MB · Heterra-1.3.0-arm64.dmg</p>
     </div>
     <ul class="notes">
       <li lang="en"><b>Requirements.</b> A Mac with Apple silicon and macOS 13 or later.</li>
       <li lang="zh"><b>系统要求。</b>Apple 芯片的 Mac,macOS 13 或更高。</li>
       <li lang="en"><b>Install.</b> Open the .dmg and drag Heterra to Applications.</li>
       <li lang="zh"><b>安装。</b>打开 .dmg,把 Heterra 拖到"应用程序"。</li>
-      <li lang="en"><b>First launch.</b> Heterra is not notarised by Apple, so macOS blocks it the first time. Open System Settings → Privacy &amp; Security and choose Open Anyway.</li>
-      <li lang="zh"><b>第一次打开。</b>Heterra 没有经过 Apple 公证,macOS 第一次会拦截。请打开"系统设置 → 隐私与安全性",选择"仍要打开"。</li>
+      <li lang="en"><b>First launch.</b> macOS blocks Heterra the first time. Open System Settings → Privacy &amp; Security and choose Open Anyway.</li>
+      <li lang="zh"><b>第一次打开。</b>macOS 第一次会拦截 Heterra。请打开"系统设置 → 隐私与安全性",选择"仍要打开"。</li>
     </ul>
+    <div class="support" lang="zh">
+      <p>软件免费使用,无需注册。若它对你的工作有帮助,欢迎自愿支持后续维护与更新:</p>
+      <div class="support-options">
+        <button type="button" class="support-option" data-qr="qr-basic"><b>基础支持</b><span>你的赞助将用于项目的日常维护和持续更新。</span></button>
+        <button type="button" class="support-option" data-qr="qr-long"><b>长期支持</b><span>你的赞助将用于支持项目的长期维护与发展。</span></button>
+      </div>
+    </div>
+    <!-- When the sponsors page exists, add its link above, and an English line:
+         Heterra is free. If it helps your work, you are welcome to support its maintenance and updates: (link) -->
   </div>
 </section>
 
 <section id="cite">
   <div class="wrap">
     <h2><span lang="en">Cite</span><span lang="zh">引用</span></h2>
-    <p class="cite">Song, Y. (2026) Heterra [software]. https://heterra.github.io</p>
-    <p class="after-cite" lang="en">Please also cite the paper of each method you use, linked above. Heterra shows the full reference in every tool's panel.</p>
-    <p class="after-cite" lang="zh">也请引用你所用方法的论文(链接见上)。每个工具的面板里都有完整的文献信息。</p>
+    <p class="before-cite" lang="en">When you use Heterra, please cite it as below, together with the paper of each method you use, linked above. Heterra shows the full reference in every tool's panel.</p>
+    <p class="before-cite" lang="zh">使用 Heterra 时,请按下面的格式引用软件,并引用你所用方法的论文(链接见上)。每个工具的面板里都有完整的文献信息。</p>
+    <p class="cite">Song, Y. (2026) Heterra: Advanced spatial analysis [software]. https://heterra.org</p>
   </div>
 </section>
 
@@ -223,6 +329,51 @@
     <h2><span lang="en">Feedback</span><span lang="zh">反馈</span></h2>
     <p class="cite" lang="en">If you have any suggestions, comments or questions, please email <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>.</p>
     <p class="cite" lang="zh">如有任何建议、意见或问题,请发邮件到 <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>。</p>
+    <div class="subscribe" lang="en">
+      <h3>Subscribe to updates</h3>
+      <p class="before-cite">Want to hear about new versions and important fixes? Copy this, fill it in and send it to <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>, with the first line as the subject.</p>
+      <pre class="template">Subject: Subscribe to Heterra software update notifications
+Name:
+Position (e.g. professor, researcher, student):
+Institution:
+Country/Region:
+Main use (optional):</pre>
+      <div class="template-actions">
+        <button type="button" class="small-button copy" data-done="Copied">Copy</button>
+        <a class="small-button" href="mailto:yongzesong.heterra@gmail.com?subject=Subscribe%20to%20Heterra%20software%20update%20notifications&amp;body=Name%3A%0D%0APosition%20%28e.g.%20professor%2C%20researcher%2C%20student%29%3A%0D%0AInstitution%3A%0D%0ACountry/Region%3A%0D%0AMain%20use%20%28optional%29%3A%0D%0A">Open in email</a>
+      </div>
+      <p class="small">Your email address is used only to send Heterra updates. To unsubscribe, reply to any of them.</p>
+    </div>
+    <div class="subscribe" lang="zh">
+      <h3>订阅更新</h3>
+      <p class="before-cite">想收到新版本和重要修复的通知?复制下面的内容,填好后发到 <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>,第一行作为邮件主题。</p>
+      <pre class="template">主题:订阅 Heterra 软件更新通知
+姓名:
+职位(如教授、研究人员、学生):
+单位:
+国家/地区:
+主要用途(可选):</pre>
+      <div class="template-actions">
+        <button type="button" class="small-button copy" data-done="已复制">复制</button>
+        <a class="small-button" href="mailto:yongzesong.heterra@gmail.com?subject=%E8%AE%A2%E9%98%85%20Heterra%20%E8%BD%AF%E4%BB%B6%E6%9B%B4%E6%96%B0%E9%80%9A%E7%9F%A5&amp;body=%E5%A7%93%E5%90%8D%3A%0D%0A%E8%81%8C%E4%BD%8D%28%E5%A6%82%E6%95%99%E6%8E%88%E3%80%81%E7%A0%94%E7%A9%B6%E4%BA%BA%E5%91%98%E3%80%81%E5%AD%A6%E7%94%9F%29%3A%0D%0A%E5%8D%95%E4%BD%8D%3A%0D%0A%E5%9B%BD%E5%AE%B6/%E5%9C%B0%E5%8C%BA%3A%0D%0A%E4%B8%BB%E8%A6%81%E7%94%A8%E9%80%94%28%E5%8F%AF%E9%80%89%29%3A%0D%0A">打开邮件</a>
+      </div>
+      <p class="small">邮箱只用于发送 Heterra 的更新通知。想退订,回复任意一封通知即可。</p>
+    </div>
+  </div>
+</section>
+
+<section id="history">
+  <div class="wrap">
+    <h2><span lang="en">Version history</span><span lang="zh">版本历史</span></h2>
+    <!-- Newest first. Add one <li> for each release. -->
+    <ul class="releases">
+      <li>
+        <span class="date"><time datetime="2026-11-05">2026-11-05</time></span>
+        <b>1.3.0</b>
+        <span lang="en">First public version. For Macs with Apple silicon.</span>
+        <span lang="zh">第一个公开版本。适用于 Apple 芯片的 Mac。</span>
+      </li>
+    </ul>
   </div>
 </section>
 </main>
@@ -231,20 +382,25 @@
   <div class="wrap">
     <p lang="en">© 2026 Yongze Song. Software: GNU GPL 3.0 or later. Documentation and tutorial data: CC BY 4.0.</p>
     <p lang="zh">© 2026 Yongze Song。软件:GNU GPL 第 3 版或更高。文档和教程数据:CC BY 4.0。</p>
+    <p lang="en">Free of charge. Licence: GPL-3.0-only. The source repository is private.</p>
+    <p lang="zh">免费软件。许可证:GPL-3.0-only。源代码仓库不公开。</p>
+    <p class="privacy" lang="en" hidden>This site uses Google Analytics, with cookies, to count visits and download clicks and to estimate visitors' countries.</p>
+    <p class="privacy" lang="zh" hidden>本网站使用 Google Analytics(含 Cookie)统计访问量和下载点击次数,并估算访问者所在的国家或地区。</p>
   </div>
 </footer>
+
+<dialog class="viewer" aria-label="Screenshot"><img src="" alt=""></dialog>
+<dialog class="qr" id="qr-basic" aria-label="基础支持" lang="zh"><p>基础支持</p><img src="assets/shots/zh/sponsor-1.jpg" alt="基础支持二维码" width="403" height="409"></dialog>
+<dialog class="qr" id="qr-long" aria-label="长期支持" lang="zh"><p>长期支持</p><img src="assets/shots/zh/sponsor-2.jpg" alt="长期支持二维码" width="392" height="392"></dialog>
 
 <script>
 (function () {
   var titles = { en: "Heterra: Advanced spatial analysis. One lightweight GIS app.", zh: "Heterra:前沿空间分析方法,一款轻量级 GIS 软件" };
-  var images = Array.prototype.slice.call(document.querySelectorAll("img[data-alt-zh]"));
-  images.forEach(function (i) { i.setAttribute("data-alt-en", i.alt); });
   function set(code) {
     var root = document.documentElement;
     root.setAttribute("data-lang", code);
     root.lang = code === "zh" ? "zh-CN" : "en";
     document.title = titles[code];
-    images.forEach(function (i) { i.alt = i.getAttribute("data-alt-" + code); });
   }
   var saved = null;
   try { saved = localStorage.getItem("lang"); } catch (e) {}
@@ -258,6 +414,57 @@
       try { localStorage.setItem("lang", code); } catch (e) {}
     });
   });
+  // a click on a screenshot shows it at full size; without scripts the link opens the image
+  var viewer = document.querySelector(".viewer");
+  var large = viewer.querySelector("img");
+  document.querySelectorAll("a.zoom").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      large.src = a.getAttribute("href");
+      large.alt = a.querySelector("img").alt;
+      viewer.showModal();
+    });
+  });
+  viewer.addEventListener("click", function () { viewer.close(); });
+  document.querySelectorAll(".support-option").forEach(function (b) {
+    b.addEventListener("click", function () { document.getElementById(b.getAttribute("data-qr")).showModal(); });
+  });
+  document.querySelectorAll(".qr").forEach(function (qr) {
+    qr.addEventListener("click", function () { qr.close(); });
+  });
+  // a copy that cannot reach the clipboard selects the text, for copying by hand
+  document.querySelectorAll(".copy").forEach(function (b) {
+    var label = b.textContent;
+    b.addEventListener("click", function () {
+      var text = b.parentNode.previousElementSibling;
+      function select() { getSelection().selectAllChildren(text); }
+      if (!navigator.clipboard) { select(); return; }
+      navigator.clipboard.writeText(text.textContent).then(function () {
+        b.textContent = b.getAttribute("data-done");
+        setTimeout(function () { b.textContent = label; }, 1500);
+      }, select);
+    });
+  });
+  // Google Analytics: the Measurement ID (G-…). Only the published site counts, not a local preview.
+  var gaId = "G-LWFK7PEZYQ";
+  if (location.hostname === "heterra.org") {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag("js", new Date());
+    gtag("config", gaId);
+    var tag = document.createElement("script");
+    tag.async = true;
+    tag.src = "https://www.googletagmanager.com/gtag/js?id=" + gaId;
+    document.head.appendChild(tag);
+    document.querySelectorAll(".privacy").forEach(function (p) { p.hidden = false; });
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest("a[data-download]");
+      if (a) gtag("event", "HeterraDownload", {
+        version: a.getAttribute("data-download"),
+        page_language: document.documentElement.getAttribute("data-lang")
+      });
+    });
+  }
 })();
 </script>
 </body>
