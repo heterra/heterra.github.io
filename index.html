@@ -41,9 +41,12 @@
     <h1 lang="zh">前沿空间分析方法,一款轻量级 GIS 软件</h1>
     <p class="lead" lang="en">Heterra is free, lightweight software for exploring spatial heterogeneity, uncovering patterns, building predictions, and evaluating models—with interactive maps, charts, and guided tutorials for every method.</p>
     <p class="lead" lang="zh">Heterra 是一款免费、轻量的空间分析软件,用于探索空间异质性、发现空间模式、构建预测模型并评估模型表现。每种方法均配有交互式地图、统计图和引导式教程,并可导出适用于学术论文与研究报告的高质量图件。</p>
-    <a class="button" href="#download"><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
-    <p class="small" lang="en">Apple silicon · macOS 13 or later</p>
-    <p class="small" lang="zh">Apple 芯片 · macOS 13 或更高</p>
+    <div class="hero-buttons">
+      <a class="button" href="#download"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
+      <a class="button" href="#download"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 1h10.5v10.5H1zM12.5 1H23v10.5H12.5zM1 12.5h10.5V23H1zM12.5 12.5H23V23H12.5z"/></svg><span lang="en">Download for Windows</span><span lang="zh">下载 Windows 版</span></a>
+    </div>
+    <p class="small" lang="en">Mac (Apple silicon, macOS 13 or later) · Windows 10 or 11 (64-bit)</p>
+    <p class="small" lang="zh">Mac(Apple 芯片,macOS 13 或更高)· Windows 10 或 11(64 位)</p>
   </div>
   <div class="wrap wide">
     <a class="zoom" lang="en" href="assets/shots/en/gcf.jpg"><img class="shot" src="assets/shots/en/gcf.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the GCF feature figure: selected variables, cross-validated R², prediction map and observed against predicted"></a>
@@ -54,16 +57,16 @@
 <section>
   <div class="wrap three">
     <div>
-      <h3 lang="en">A native Mac app</h3>
-      <h3 lang="zh">原生 Mac 应用</h3>
+      <h3 lang="en">For Mac and Windows</h3>
+      <h3 lang="zh">支持 Mac 和 Windows</h3>
       <p lang="en">Open shapefiles, GeoTIFF, GeoPackage, GeoJSON, CSV and File Geodatabase. Style and explore layers, then run a method in the same window, with no R or Python to install.</p>
       <p lang="zh">可打开 Shapefile、GeoTIFF、GeoPackage、GeoJSON、CSV 和 File Geodatabase。在同一个窗口里设置符号、查看图层、运行方法,不用安装 R 或 Python。</p>
     </div>
     <div>
       <h3 lang="en">Results checked against R</h3>
       <h3 lang="zh">结果与 R 核对</h3>
-      <p lang="en">Each method is tested against its R reference implementation. Every tutorial compares its results with the reference on your own Mac.</p>
-      <p lang="zh">每个方法都与其 R 参考实现对照测试。教程会在你自己的 Mac 上把结果与参考结果比较。</p>
+      <p lang="en">Each method is tested against its R reference implementation. Every tutorial compares its results with the reference on your own computer.</p>
+      <p lang="zh">每个方法都与其 R 参考实现对照测试。教程会在你自己的电脑上把结果与参考结果比较。</p>
     </div>
     <div>
       <h3 lang="en">Figures ready for papers</h3>
@@ -287,22 +290,35 @@
 
 <section id="download">
   <div class="wrap download">
-    <div>
-      <h2><span lang="en">Download</span><span lang="zh">下载</span></h2>
-      <!-- At a release, put the dmg in downloads/ and change the link, its data-download and the version below.
-           A click on data-download is counted when gaId is set. -->
-      <a class="button" href="downloads/Heterra-1.3.0-arm64.dmg" download data-download="1.3.0"><span lang="en">Download Heterra 1.3.0</span><span lang="zh">下载 Heterra 1.3.0</span></a>
-      <p class="small" lang="en">Version 1.3.0 · 24 MB · Heterra-1.3.0-arm64.dmg</p>
-      <p class="small" lang="zh">版本 1.3.0 · 24 MB · Heterra-1.3.0-arm64.dmg</p>
+    <h2><span lang="en">Download</span><span lang="zh">下载</span></h2>
+    <!-- At a release, put the installers in downloads/ and change each link, its data-download and the lines below.
+         A click on data-download is counted when gaId is set (its value: version and platform). -->
+    <div class="platform">
+      <a class="button" href="downloads/Heterra-1.4.0-arm64.dmg" download data-download="1.4.0-mac"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
+      <p class="small" lang="en">Version 1.4.0 · 24 MB · Heterra-1.4.0-arm64.dmg</p>
+      <p class="small" lang="zh">版本 1.4.0 · 24 MB · Heterra-1.4.0-arm64.dmg</p>
+      <ul class="notes">
+        <li lang="en"><b>Requirements.</b> A Mac with Apple silicon and macOS 13 or later.</li>
+        <li lang="zh"><b>系统要求。</b>Apple 芯片的 Mac,macOS 13 或更高。</li>
+        <li lang="en"><b>Install.</b> Open the .dmg and drag Heterra to Applications.</li>
+        <li lang="zh"><b>安装。</b>打开 .dmg,把 Heterra 拖到"应用程序"。</li>
+        <li lang="en"><b>First launch.</b> macOS blocks Heterra the first time. Open System Settings → Privacy &amp; Security and choose Open Anyway.</li>
+        <li lang="zh"><b>第一次打开。</b>macOS 第一次会拦截 Heterra。请打开"系统设置 → 隐私与安全性",选择"仍要打开"。</li>
+      </ul>
     </div>
-    <ul class="notes">
-      <li lang="en"><b>Requirements.</b> A Mac with Apple silicon and macOS 13 or later.</li>
-      <li lang="zh"><b>系统要求。</b>Apple 芯片的 Mac,macOS 13 或更高。</li>
-      <li lang="en"><b>Install.</b> Open the .dmg and drag Heterra to Applications.</li>
-      <li lang="zh"><b>安装。</b>打开 .dmg,把 Heterra 拖到"应用程序"。</li>
-      <li lang="en"><b>First launch.</b> macOS blocks Heterra the first time. Open System Settings → Privacy &amp; Security and choose Open Anyway.</li>
-      <li lang="zh"><b>第一次打开。</b>macOS 第一次会拦截 Heterra。请打开"系统设置 → 隐私与安全性",选择"仍要打开"。</li>
-    </ul>
+    <div class="platform">
+      <a class="button" href="downloads/Heterra-1.4.0-x64-setup.exe" download data-download="1.4.0-windows"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 1h10.5v10.5H1zM12.5 1H23v10.5H12.5zM1 12.5h10.5V23H1zM12.5 12.5H23V23H12.5z"/></svg><span lang="en">Download for Windows</span><span lang="zh">下载 Windows 版</span></a>
+      <p class="small" lang="en">Version 1.4.0 · 40 MB · Heterra-1.4.0-x64-setup.exe</p>
+      <p class="small" lang="zh">版本 1.4.0 · 40 MB · Heterra-1.4.0-x64-setup.exe</p>
+      <ul class="notes">
+        <li lang="en"><b>Requirements.</b> Windows 10 (version 1809 or later) or Windows 11, 64-bit, with a processor from 2013 (Intel) or 2015 (AMD) or later. The installer checks the processor.</li>
+        <li lang="zh"><b>系统要求。</b>Windows 10(1809 或更新版本)或 Windows 11,64 位;处理器为 Intel 2013 年或 AMD 2015 年以后的型号。安装程序会检查处理器。</li>
+        <li lang="en"><b>Install.</b> Double-click the file. No administrator is needed.</li>
+        <li lang="zh"><b>安装。</b>双击下载的文件,不需要管理员权限。</li>
+        <li lang="en"><b>"Windows protected your PC".</b> Click More info, then Run anyway.</li>
+        <li lang="zh"><b>"Windows 已保护你的电脑"。</b>点击"更多信息",再点击"仍要运行"。</li>
+      </ul>
+    </div>
     <div class="support" lang="zh">
       <p>软件免费使用,无需注册。若它对你的工作有帮助,欢迎自愿支持后续维护与更新:</p>
       <div class="support-options">
@@ -367,6 +383,12 @@ Main use (optional):</pre>
     <h2><span lang="en">Version history</span><span lang="zh">版本历史</span></h2>
     <!-- Newest first. Add one <li> for each release. -->
     <ul class="releases">
+      <li>
+        <span class="date"><time datetime="2026-11-07">2026-11-07</time></span>
+        <b>1.4.0</b>
+        <span lang="en">Windows version. Improved settings and tutorials.</span>
+        <span lang="zh">新增 Windows 版。改进了设置和教程。</span>
+      </li>
       <li>
         <span class="date"><time datetime="2026-11-05">2026-11-05</time></span>
         <b>1.3.0</b>
