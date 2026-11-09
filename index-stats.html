@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-/* downloads section: try-out copy, style.css is not changed */
+/* users section: try-out copy, style.css is not changed */
 .reach { padding: 56px 0; background: var(--bg-soft); }
 .reach .wrap { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 48px; align-items: center; }
 .reach-label, .reach-chart-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--muted); }
@@ -81,24 +81,6 @@
     <a class="zoom" lang="zh" href="assets/shots/zh/gcf.jpg"><img class="shot" src="assets/shots/zh/gcf.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示 GCF 代表性图:选中的变量、交叉验证 R²、预测图、观测值与预测值"></a>
   </div>
 </div>
-
-<!-- Downloads. Shown only when stats.json can be read. The numbers come from stats.json; nothing here is edited by hand. -->
-<section class="reach" id="reach" hidden>
-  <div class="wrap">
-    <div>
-      <p class="reach-label"><span lang="en">Total downloads</span><span lang="zh">总下载量</span></p>
-      <p class="reach-total" id="reach-total"></p>
-      <p class="reach-places" lang="en">Users from <b class="reach-countries"></b> countries and regions</p>
-      <p class="reach-places" lang="zh">用户来自 <b class="reach-countries"></b> 个国家和地区</p>
-      <p class="reach-updated"><span lang="en">Updated </span><span lang="zh">更新于 </span><time id="reach-updated"></time></p>
-      <p class="reach-sample" id="reach-sample" hidden><span lang="en">Preview: the total and chart are sample numbers</span><span lang="zh">预览:总数和图是示例数字</span></p>
-    </div>
-    <div>
-      <p class="reach-chart-title"><span lang="en">Cumulative downloads by day</span><span lang="zh">每日累计下载量</span></p>
-      <div class="reach-chart" id="reach-chart"></div>
-    </div>
-  </div>
-</section>
 
 <section>
   <div class="wrap three">
@@ -444,6 +426,24 @@ Main use (optional):</pre>
     </ul>
   </div>
 </section>
+
+<!-- Users. Shown only when stats.json can be read. The numbers come from stats.json; nothing here is edited by hand. -->
+<section class="reach" id="reach" hidden>
+  <div class="wrap">
+    <div>
+      <p class="reach-label"><span lang="en">Users</span><span lang="zh">用户</span></p>
+      <p class="reach-total" id="reach-total"></p>
+      <p class="reach-places" lang="en">from <b class="reach-countries"></b> countries and regions</p>
+      <p class="reach-places" lang="zh">来自 <b class="reach-countries"></b> 个国家和地区</p>
+      <p class="reach-updated"><span lang="en">Updated </span><span lang="zh">更新于 </span><time id="reach-updated"></time></p>
+      <p class="reach-sample" id="reach-sample" hidden><span lang="en">Preview: the number and chart are sample data</span><span lang="zh">预览:数字和图是示例数据</span></p>
+    </div>
+    <div>
+      <p class="reach-chart-title"><span lang="en">Cumulative users by day</span><span lang="zh">每日累计用户数</span></p>
+      <div class="reach-chart" id="reach-chart"></div>
+    </div>
+  </div>
+</section>
 </main>
 
 <footer>
@@ -536,7 +536,7 @@ Main use (optional):</pre>
 })();
 </script>
 <script>
-// Downloads section: reads stats.json { updated, countries, sample?, daily: [{ date: "YYYY-MM-DD", count }] }.
+// Users section: reads stats.json { updated, countries, sample?, daily: [{ date: "YYYY-MM-DD", count }] }.
 // The total is the sum of the daily counts, so the number and the chart cannot disagree.
 (function () {
   var box = document.getElementById("reach");
@@ -579,7 +579,7 @@ Main use (optional):</pre>
     if (!width || !days.length) return;
     chart.textContent = "";
     var svg = el("svg", { viewBox: "0 0 " + width + " " + HEIGHT, height: HEIGHT, role: "img",
-      "aria-label": n(days[days.length - 1].total) + " cumulative downloads" }, chart);
+      "aria-label": n(days[days.length - 1].total) + " cumulative users" }, chart);
     var first = days[0].t, last = days[days.length - 1].t;
     var plotW = width - LEFT - RIGHT, base = HEIGHT - BOTTOM;
     var scale = niceAxis(Math.max(days[days.length - 1].total, 1));
@@ -621,7 +621,7 @@ Main use (optional):</pre>
       dot.setAttribute("cx", px); dot.setAttribute("cy", py);
       tip.innerHTML = '<small><span lang="en">' + dateEn(best.date) + '</span><span lang="zh">' + dateZh(best.date) + "</span></small><br>" +
         "<b>" + n(best.total) + '</b> <span lang="en">total</span><span lang="zh">累计</span><br>' +
-        "<small>+" + n(best.count) + ' <span lang="en">that day</span><span lang="zh">当天</span></small>';
+        "<small>+" + n(best.count) + ' <span lang="en">new that day</span><span lang="zh">当天新增</span></small>';
       tip.hidden = false;
       var left = px + 12;
       if (left + tip.offsetWidth > width) left = px - 12 - tip.offsetWidth;
