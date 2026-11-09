@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heterra: Advanced spatial analysis. One lightweight GIS app.</title>
+<meta name="description" content="Heterra is free, lightweight software for exploring spatial heterogeneity, uncovering patterns, building predictions, and evaluating models—with interactive maps, charts, and guided tutorials for every method.">
+<meta property="og:title" content="Heterra: Advanced spatial analysis. One lightweight GIS app.">
+<meta property="og:description" content="Nine spatial analysis methods with maps, charts and tutorials, checked against their R reference implementations.">
+<meta property="og:image" content="https://heterra.org/assets/shots/en/gcf.jpg">
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* downloads section: try-out copy, style.css is not changed */
+.reach { padding: 56px 0; background: var(--bg-soft); }
+.reach .wrap { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 48px; align-items: center; }
+.reach-label, .reach-chart-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--muted); }
+.reach-total { margin: 2px 0 14px; font: 600 64px/1.05 var(--serif); color: var(--heading); font-variant-numeric: tabular-nums; }
+.reach-places { margin: 0; font-size: 18px; line-height: 1.4; color: var(--text); }
+.reach-places b { font-weight: 600; color: var(--heading); }
+.reach-updated { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+.reach-sample { display: inline-block; margin: 10px 0 0; padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; color: var(--muted); }
+.reach-chart { position: relative; margin-top: 8px; touch-action: pan-y; }
+.reach-chart svg { display: block; width: 100%; }
+.reach-chart text { font: 400 13px var(--sans); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.reach-grid { stroke: var(--line); stroke-width: 1; }
+.reach-area { fill: var(--accent); opacity: 0.1; }
+.reach-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.reach-dot { fill: var(--accent); stroke: var(--bg-soft); stroke-width: 2; }
+.reach-cross { stroke: var(--muted); stroke-width: 1; }
+.reach-tip { position: absolute; top: 0; left: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); box-shadow: var(--shadow); font-size: 14px; line-height: 1.35; white-space: nowrap; pointer-events: none; }
+.reach-tip b { font-weight: 600; color: var(--heading); font-variant-numeric: tabular-nums; }
+.reach-tip small { font-size: 13px; color: var(--muted); }
+.reach-table { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 820px) {
+  .reach { padding: 40px 0; }
+  .reach .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .reach-total { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="#"><span lang="en">Home</span><span lang="zh">首页</span></a>
+      <a href="#results"><span lang="en">Results</span><span lang="zh">结果</span></a>
+      <a href="#methods"><span lang="en">Methods</span><span lang="zh">方法</span></a>
+      <a href="#download"><span lang="en">Download</span><span lang="zh">下载</span></a>
+      <a href="#feedback"><span lang="en">Feedback</span><span lang="zh">反馈</span></a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-set="en">EN</button>
+      <button type="button" data-set="zh">中</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="hero">
+  <div class="wrap">
+    <p class="hero-name"><img src="assets/icon.png" alt="">Heterra</p>
+    <h1 lang="en">Advanced spatial analysis. One lightweight GIS app.</h1>
+    <h1 lang="zh">前沿空间分析方法,一款轻量级 GIS 软件</h1>
+    <p class="lead" lang="en">Heterra is free, lightweight software for exploring spatial heterogeneity, uncovering patterns, building predictions, and evaluating models—with interactive maps, charts, and guided tutorials for every method.</p>
+    <p class="lead" lang="zh">Heterra 是一款免费、轻量的空间分析软件,用于探索空间异质性、发现空间模式、构建预测模型并评估模型表现。每种方法均配有交互式地图、统计图和引导式教程,并可导出适用于学术论文与研究报告的高质量图件。</p>
+    <div class="hero-buttons">
+      <a class="button" href="#download"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
+      <a class="button" href="#download"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 1h10.5v10.5H1zM12.5 1H23v10.5H12.5zM1 12.5h10.5V23H1zM12.5 12.5H23V23H12.5z"/></svg><span lang="en">Download for Windows</span><span lang="zh">下载 Windows 版</span></a>
+    </div>
+    <p class="small" lang="en">Mac (Apple silicon, macOS 13 or later) · Windows 10 or 11 (64-bit)</p>
+    <p class="small" lang="zh">Mac(Apple 芯片,macOS 13 或更高)· Windows 10 或 11(64 位)</p>
+  </div>
+  <div class="wrap wide">
+    <a class="zoom" lang="en" href="assets/shots/en/gcf.jpg"><img class="shot" src="assets/shots/en/gcf.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the GCF feature figure: selected variables, cross-validated R², prediction map and observed against predicted"></a>
+    <a class="zoom" lang="zh" href="assets/shots/zh/gcf.jpg"><img class="shot" src="assets/shots/zh/gcf.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示 GCF 代表性图:选中的变量、交叉验证 R²、预测图、观测值与预测值"></a>
+  </div>
+</div>
+
+<!-- Downloads. Shown only when stats.json can be read. The numbers come from stats.json; nothing here is edited by hand. -->
+<section class="reach" id="reach" hidden>
+  <div class="wrap">
+    <div>
+      <p class="reach-label"><span lang="en">Total downloads</span><span lang="zh">总下载量</span></p>
+      <p class="reach-total" id="reach-total"></p>
+      <p class="reach-places" lang="en">Users from <b class="reach-countries"></b> countries and regions</p>
+      <p class="reach-places" lang="zh">用户来自 <b class="reach-countries"></b> 个国家和地区</p>
+      <p class="reach-updated"><span lang="en">Updated </span><span lang="zh">更新于 </span><time id="reach-updated"></time></p>
+      <p class="reach-sample" id="reach-sample" hidden><span lang="en">Preview: the total and chart are sample numbers</span><span lang="zh">预览:总数和图是示例数字</span></p>
+    </div>
+    <div>
+      <p class="reach-chart-title"><span lang="en">Cumulative downloads by day</span><span lang="zh">每日累计下载量</span></p>
+      <div class="reach-chart" id="reach-chart"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap three">
+    <div>
+      <h3 lang="en">For Mac and Windows</h3>
+      <h3 lang="zh">支持 Mac 和 Windows</h3>
+      <p lang="en">Open shapefiles, GeoTIFF, GeoPackage, GeoJSON, CSV and File Geodatabase. Style and explore layers, then run a method in the same window, with no R or Python to install.</p>
+      <p lang="zh">可打开 Shapefile、GeoTIFF、GeoPackage、GeoJSON、CSV 和 File Geodatabase。在同一个窗口里设置符号、查看图层、运行方法,不用安装 R 或 Python。</p>
+    </div>
+    <div>
+      <h3 lang="en">Results checked against R</h3>
+      <h3 lang="zh">结果与 R 核对</h3>
+      <p lang="en">Each method is tested against its R reference implementation. Every tutorial compares its results with the reference on your own computer.</p>
+      <p lang="zh">每个方法都与其 R 参考实现对照测试。教程会在你自己的电脑上把结果与参考结果比较。</p>
+    </div>
+    <div>
+      <h3 lang="en">Figures ready for papers</h3>
+      <h3 lang="zh">可直接用于论文的图</h3>
+      <p lang="en">Export charts and page layouts as vector PDF and SVG, or as PNG at print resolution, with colours from RColorBrewer. Keep the data behind each chart as CSV.</p>
+      <p lang="zh">统计图和版面可导出为矢量 PDF、SVG,或印刷分辨率的 PNG,颜色来自 RColorBrewer。每张图背后的数据也可以导出为 CSV。</p>
+    </div>
+  </div>
+</section>
+
+<section class="feature">
+  <div class="wrap wide">
+    <h2><span lang="en">The whole result in one figure</span><span lang="zh">一张图看完整个结果</span></h2>
+    <p class="intro" lang="en">When a run ends, its main chart opens. In OPGD, the feature figure brings together the Q curves, optimal breaks, factor detector, risk means, risk map and risk, interaction and ecological detectors, ready to export as PDF, SVG or PNG at 300 dpi.</p>
+    <p class="intro" lang="zh">运行结束后,主要的统计图随即打开。OPGD 的代表性图把 Q 曲线、最优断点、因子探测、风险均值、风险地图以及风险、交互和生态探测放在同一张图里,可导出为 PDF、SVG 或 300 dpi 的 PNG。</p>
+    <a class="zoom" lang="en" href="assets/shots/en/opgd.jpg"><img class="shot" src="assets/shots/en/opgd.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the OPGD feature figure in eight panels"></a>
+    <a class="zoom" lang="zh" href="assets/shots/zh/opgd.jpg"><img class="shot" src="assets/shots/zh/opgd.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示八个分图的 OPGD 代表性图"></a>
+  </div>
+  <div class="wrap wide three after-shot">
+    <div>
+      <h3 lang="en">Set up in steps, run where it counts</h3>
+      <h3 lang="zh">分步设置,需要时才运行</h3>
+      <p lang="en">Each tool walks through its settings one step at a time. Run appears only at the steps that compute something.</p>
+      <p lang="zh">每个工具按步骤设置,只有需要计算的步骤才有运行按钮。</p>
+    </div>
+    <div>
+      <h3 lang="en">A tutorial in every tool</h3>
+      <h3 lang="zh">每个工具都有教程</h3>
+      <p lang="en">Load an example, follow the steps and read the results, with a guide in English and Chinese.</p>
+      <p lang="zh">载入案例,跟着步骤操作并解读结果,手册有中英文。</p>
+    </div>
+    <div>
+      <h3 lang="en">Charts linked to the map</h3>
+      <h3 lang="zh">统计图与地图联动</h3>
+      <p lang="en">Where a chart lists a layer's categories, click one to select its features on the map.</p>
+      <p lang="zh">统计图列出图层的类别时,点击一个类别就能在地图上选中对应要素。</p>
+    </div>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap wide">
+    <h2><span lang="en">Results from every method</span><span lang="zh">每个方法的结果</span></h2>
+    <p class="intro" lang="en">Each screenshot is the result page after running that method's tutorial. Click to enlarge. Several tutorials use simulated data, so the numbers illustrate the tool and do not describe a real study.</p>
+    <p class="intro" lang="zh">每张截图都是运行该方法教程后的结果页面,点击可放大。部分教程使用模拟数据,图中的数字只用于演示软件,不代表真实研究结果。</p>
+    <div class="gallery">
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/opgd.jpg"><img class="shot" src="assets/shots/en/opgd.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the OPGD feature figure in eight panels"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/opgd.jpg"><img class="shot" src="assets/shots/zh/opgd.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示八个分图的 OPGD 代表性图"></a>
+        <figcaption>
+          <p class="group-name heterogeneity"><span lang="en">Spatial heterogeneity</span><span lang="zh">空间异质性</span></p>
+          <p><b>OPGD</b> <span lang="en">The optimal discretisation with the factor, risk, interaction and ecological detectors, in one figure.</span><span lang="zh">最优离散化,以及因子、风险、交互和生态探测结果,都在一张图中。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/lisp.jpg"><img class="shot" src="assets/shots/en/lisp.jpg" width="2000" height="930" loading="lazy" alt="LISP maps of the variable pairs and their significance"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/lisp.jpg"><img class="shot" src="assets/shots/zh/lisp.jpg" width="2000" height="969" loading="lazy" alt="LISP 变量对地图及其显著性"></a>
+        <figcaption>
+          <p class="group-name heterogeneity"><span lang="en">Spatial heterogeneity</span><span lang="zh">空间异质性</span></p>
+          <p><b>LISP</b> <span lang="en">Local power of variable pairs and its significance, at every location.</span><span lang="zh">每个位置上变量对的局部影响及其显著性。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/gc.jpg"><img class="shot" src="assets/shots/en/gc.jpg" width="2000" height="930" loading="lazy" alt="GC against the value of each of five variables: means in 20 bins with confidence intervals and a fitted curve"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/gc.jpg"><img class="shot" src="assets/shots/zh/gc.jpg" width="2000" height="969" loading="lazy" alt="五个变量的值与 GC 的曲线图:20 个分箱的均值、置信区间和拟合曲线"></a>
+        <figcaption>
+          <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+          <p><b>GC</b> <span lang="en">Geocomplexity against the value of each variable, with confidence intervals.</span><span lang="zh">每个变量的值与地理复杂性的关系曲线,含置信区间。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/sda.jpg"><img class="shot" src="assets/shots/en/sda.jpg" width="2000" height="930" loading="lazy" alt="SDA and baseline prediction maps of soil zinc"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/sda.jpg"><img class="shot" src="assets/shots/zh/sda.jpg" width="2000" height="969" loading="lazy" alt="土壤锌的 SDA 与基线预测图"></a>
+        <figcaption>
+          <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+          <p><b>SDA</b> <span lang="en">Prediction maps with and without the SDA variables.</span><span lang="zh">使用与不使用 SDA 变量的预测图。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/sdo.jpg"><img class="shot" src="assets/shots/en/sdo.jpg" width="2000" height="930" loading="lazy" alt="Bar charts of cross-validated R² with and without the SDO variables"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/sdo.jpg"><img class="shot" src="assets/shots/zh/sdo.jpg" width="2000" height="969" loading="lazy" alt="使用与不使用 SDO 变量的交叉验证 R² 柱状图"></a>
+        <figcaption>
+          <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+          <p><b>SDO</b> <span lang="en">Cross-validated R² with and without the SDO variables.</span><span lang="zh">使用与不使用 SDO 变量的交叉验证 R²。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/gcf.jpg"><img class="shot" src="assets/shots/en/gcf.jpg" width="2600" height="1209" loading="lazy" alt="Heterra's Chart page with the GCF feature figure: selected variables, cross-validated R², prediction map and observed against predicted"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/gcf.jpg"><img class="shot" src="assets/shots/zh/gcf.jpg" width="2600" height="1260" loading="lazy" alt="Heterra 的图表页,显示 GCF 代表性图:选中的变量、交叉验证 R²、预测图、观测值与预测值"></a>
+        <figcaption>
+          <p class="group-name prediction"><span lang="en">Spatial prediction</span><span lang="zh">空间预测</span></p>
+          <p><b>GCF</b> <span lang="en">Selected variables, R², the prediction map and observed against predicted, in one figure.</span><span lang="zh">入选变量、R²、预测图,以及观测值与预测值的对比,都在一张图中。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/gos.jpg"><img class="shot" src="assets/shots/en/gos.jpg" width="2000" height="930" loading="lazy" alt="GOS prediction map, uncertainty map and κ–RMSE curve"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/gos.jpg"><img class="shot" src="assets/shots/zh/gos.jpg" width="2000" height="969" loading="lazy" alt="GOS 预测图、不确定性图和 κ–RMSE 曲线"></a>
+        <figcaption>
+          <p class="group-name prediction"><span lang="en">Spatial prediction</span><span lang="zh">空间预测</span></p>
+          <p><b>GOS</b> <span lang="en">Prediction, its uncertainty and the search for the optimal similarity.</span><span lang="zh">预测、预测不确定性,以及最优相似度的搜索曲线。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/dsi.jpg"><img class="shot" src="assets/shots/en/dsi.jpg" width="2000" height="930" loading="lazy" alt="DSI triangles showing the θ range of five models"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/dsi.jpg"><img class="shot" src="assets/shots/zh/dsi.jpg" width="2000" height="969" loading="lazy" alt="显示五个模型 θ 范围的 DSI 三角图"></a>
+        <figcaption>
+          <p class="group-name evaluation"><span lang="en">Model evaluation</span><span lang="zh">模型评估</span></p>
+          <p><b>DSI</b> <span lang="en">The range of θ for five models, ordered by θ₃.</span><span lang="zh">五个模型的 θ 范围,按 θ₃ 排序。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/sie.jpg"><img class="shot" src="assets/shots/en/sie.jpg" width="2000" height="930" loading="lazy" alt="SIE by model, multi-scale SIE, and SIE against R² for ten models with error bars"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/sie.jpg"><img class="shot" src="assets/shots/zh/sie.jpg" width="2000" height="969" loading="lazy" alt="十个模型的 SIE、多尺度 SIE,以及 SIE 与 R² 散点图,含误差线"></a>
+        <figcaption>
+          <p class="group-name evaluation"><span lang="en">Model evaluation</span><span lang="zh">模型评估</span></p>
+          <p><b>SIE</b> <span lang="en">SIE by model, multi-scale SIE, and SIE against R² for ten models, with fold standard errors.</span><span lang="zh">十个模型的 SIE、多尺度 SIE,以及 SIE 与 R²,误差线为折间标准误。</span></p>
+        </figcaption>
+      </figure>
+      <figure class="tile">
+        <a class="zoom" lang="en" href="assets/shots/en/map.jpg"><img class="shot" src="assets/shots/en/map.jpg" width="2000" height="930" loading="lazy" alt="Heterra's Map page with NDVI change in seven natural-break classes"></a>
+        <a class="zoom" lang="zh" href="assets/shots/zh/map.jpg"><img class="shot" src="assets/shots/zh/map.jpg" width="2000" height="969" loading="lazy" alt="Heterra 的地图页,显示按自然断点分为七级的 NDVI 变化"></a>
+        <figcaption>
+          <p class="group-name data"><span lang="en">Map</span><span lang="zh">地图</span></p>
+          <p><span lang="en">Style any layer, here in seven natural-break classes.</span><span lang="zh">为任意图层设置符号,这里按自然断点分为七级。</span></p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="methods">
+  <div class="wrap">
+    <h2><span lang="en">Methods</span><span lang="zh">方法</span></h2>
+
+    <div class="group">
+      <p class="group-name heterogeneity"><span lang="en">Spatial heterogeneity</span><span lang="zh">空间异质性</span></p>
+      <div class="method">
+        <abbr>OPGD</abbr>
+        <div><strong lang="en">Optimal parameters-based geographical detector</strong><strong lang="zh">最优参数地理探测器</strong>
+          <span class="about" lang="en">Finds the discretization of each continuous factor that best explains y, then runs the factor, interaction, risk and ecological detectors.</span>
+          <span class="about" lang="zh">为每个连续因子寻找最能解释 y 的离散化方案,再运行因子、交互、风险和生态探测。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/15481603.2020.1760434">Song et al. 2020</a></div>
+      </div>
+      <div class="method">
+        <abbr>LISP</abbr>
+        <div><strong lang="en">Local indicator of stratified power</strong><strong lang="zh">局部分层影响</strong>
+          <span class="about" lang="en">The geographical-detector q inside a window around every location, for each variable, variable pairs and all variables together.</span>
+          <span class="about" lang="zh">在每个位置周围的窗口内计算地理探测器 q,分别对单个变量、变量对和全部变量计算。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2024.2437811">Hu et al. 2024</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name pattern"><span lang="en">Spatial pattern</span><span lang="zh">空间模式</span></p>
+      <div class="method">
+        <abbr>GC</abbr>
+        <div><strong lang="en">Geocomplexity</strong><strong lang="zh">地理复杂性</strong>
+          <span class="about" lang="en">How strongly each location departs from the smooth spatial dependence of its neighbourhood, per variable.</span>
+          <span class="about" lang="zh">逐变量衡量每个位置偏离其邻域平滑空间依赖的程度。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2023.2203212">Zhang et al. 2023</a></div>
+      </div>
+      <div class="method">
+        <abbr>SDA</abbr>
+        <div><strong lang="en">Second dimension of spatial association</strong><strong lang="zh">第二维度空间关系</strong>
+          <span class="about" lang="en">Quantiles of each covariate around every sample become new variables; the stable ones are selected and their gain cross-validated.</span>
+          <span class="about" lang="zh">把每个样本周围协变量的分位数变成新变量,选出稳定的变量,并用交叉验证说明精度提高多少。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1016/j.jag.2022.102834">Song 2022</a></div>
+      </div>
+      <div class="method">
+        <abbr>SDO</abbr>
+        <div><strong lang="en">Second-dimension outliers</strong><strong lang="zh">第二维度异常</strong>
+          <span class="about" lang="en">Local outlier strengths of each covariate around every sample become new variables; the stable ones are selected and their gain cross-validated.</span>
+          <span class="about" lang="zh">把每个样本周围协变量的局部异常强度变成新变量,选出稳定的变量,并用交叉验证说明精度提高多少。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2025.2580414">Ren et al. 2026a</a><br><a href="https://doi.org/10.1080/13658816.2026.2682957">Ren et al. 2026b</a><br><a href="https://doi.org/10.1016/j.jag.2022.102834">Song 2022</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name prediction"><span lang="en">Spatial prediction</span><span lang="zh">空间预测</span></p>
+      <div class="method">
+        <abbr>GCF</abbr>
+        <div><strong lang="en">Generalized covariate field</strong><strong lang="zh">广义协变量场</strong>
+          <span class="about" lang="en">Expands covariates into spatial-pattern and neighbourhood-distribution features, selects stable predictors and predicts.</span>
+          <span class="about" lang="zh">把协变量扩展为空间模式与邻域分布特征,选出稳定的预测变量并预测。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2026.2729719">Song 2026</a></div>
+      </div>
+      <div class="method">
+        <abbr>GOS</abbr>
+        <div><strong lang="en">Geographically optimal similarity</strong><strong lang="zh">地理最优相似度</strong>
+          <span class="about" lang="en">Predicts a variable at new locations from the samples whose covariate configuration is most similar, with a prediction uncertainty.</span>
+          <span class="about" lang="zh">用协变量配置最相似的样本预测新位置上的变量,并给出预测不确定性。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1007/s11004-022-10036-8">Song 2022</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name evaluation"><span lang="en">Model evaluation</span><span lang="zh">模型评估</span></p>
+      <div class="method">
+        <abbr>DSI</abbr>
+        <div><strong lang="en">Degree of spatial interpretability</strong><strong lang="zh">空间解释度</strong>
+          <span class="about" lang="en">How much of the spatial autocorrelation and spatial heterogeneity in y each model's residuals no longer carry.</span>
+          <span class="about" lang="zh">衡量每个模型的残差中不再含有 y 的多少空间自相关与空间异质性。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1080/13658816.2026.2614335">Liu et al. 2026</a></div>
+      </div>
+      <div class="method">
+        <abbr>SIE</abbr>
+        <div><strong lang="en">Spatial information explained</strong><strong lang="zh">空间信息解释率</strong>
+          <span class="about" lang="en">How much of the spatial information in y a prediction model explains, from out-of-fold predictions.</span>
+          <span class="about" lang="zh">根据交叉验证的样本外预测,衡量模型解释了 y 中多少空间信息。</span></div>
+        <div class="papers"><a href="https://doi.org/10.1016/j.isprsjprs.2026.09.034">Song 2026</a></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <p class="group-name data"><span lang="en">Data tools</span><span lang="zh">数据工具</span></p>
+      <p class="tools" lang="en">CSV to points · Reproject · Raster to grid table · Join · Field calculator · Clip</p>
+      <p class="tools" lang="zh">CSV 转点 · 重投影 · 栅格转格网表 · 连接 · 字段计算 · 裁剪</p>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap download">
+    <h2><span lang="en">Download</span><span lang="zh">下载</span></h2>
+    <!-- At a release, put the installers in downloads/ and change each link, its data-download and the lines below.
+         A click on data-download is counted when gaId is set (its value: version and platform). -->
+    <div class="platform">
+      <a class="button" href="downloads/Heterra-1.4.0-arm64.dmg" download data-download="1.4.0-mac"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
+      <p class="small" lang="en">Version 1.4.0 · 24 MB · Heterra-1.4.0-arm64.dmg</p>
+      <p class="small" lang="zh">版本 1.4.0 · 24 MB · Heterra-1.4.0-arm64.dmg</p>
+      <ul class="notes">
+        <li lang="en"><b>Requirements.</b> A Mac with Apple silicon and macOS 13 or later.</li>
+        <li lang="zh"><b>系统要求。</b>Apple 芯片的 Mac,macOS 13 或更高。</li>
+        <li lang="en"><b>Install.</b> Open the .dmg and drag Heterra to Applications.</li>
+        <li lang="zh"><b>安装。</b>打开 .dmg,把 Heterra 拖到"应用程序"。</li>
+        <li lang="en"><b>First launch.</b> macOS blocks Heterra the first time. Open System Settings → Privacy &amp; Security and choose Open Anyway.</li>
+        <li lang="zh"><b>第一次打开。</b>macOS 第一次会拦截 Heterra。请打开"系统设置 → 隐私与安全性",选择"仍要打开"。</li>
+      </ul>
+    </div>
+    <div class="platform">
+      <a class="button" href="downloads/Heterra-1.4.0-x64-setup.exe" download data-download="1.4.0-windows"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 1h10.5v10.5H1zM12.5 1H23v10.5H12.5zM1 12.5h10.5V23H1zM12.5 12.5H23V23H12.5z"/></svg><span lang="en">Download for Windows</span><span lang="zh">下载 Windows 版</span></a>
+      <p class="small" lang="en">Version 1.4.0 · 40 MB · Heterra-1.4.0-x64-setup.exe</p>
+      <p class="small" lang="zh">版本 1.4.0 · 40 MB · Heterra-1.4.0-x64-setup.exe</p>
+      <ul class="notes">
+        <li lang="en"><b>Requirements.</b> Windows 10 (version 1809 or later) or Windows 11, 64-bit, with a processor from 2013 (Intel) or 2015 (AMD) or later. The installer checks the processor.</li>
+        <li lang="zh"><b>系统要求。</b>Windows 10(1809 或更新版本)或 Windows 11,64 位;处理器为 Intel 2013 年或 AMD 2015 年以后的型号。安装程序会检查处理器。</li>
+        <li lang="en"><b>Install.</b> Double-click the file. No administrator is needed.</li>
+        <li lang="zh"><b>安装。</b>双击下载的文件,不需要管理员权限。</li>
+        <li lang="en"><b>"Windows protected your PC".</b> Click More info, then Run anyway.</li>
+        <li lang="zh"><b>"Windows 已保护你的电脑"。</b>点击"更多信息",再点击"仍要运行"。</li>
+      </ul>
+    </div>
+    <div class="support" lang="zh">
+      <p>软件免费使用,无需注册。若它对你的工作有帮助,欢迎自愿支持后续维护与更新:</p>
+      <div class="support-options">
+        <button type="button" class="support-option" data-qr="qr-basic"><b>基础支持</b><span>你的赞助将用于项目的日常维护和持续更新。</span></button>
+        <button type="button" class="support-option" data-qr="qr-long"><b>长期支持</b><span>你的赞助将用于支持项目的长期维护与发展。</span></button>
+      </div>
+    </div>
+    <!-- When the sponsors page exists, add its link above, and an English line:
+         Heterra is free. If it helps your work, you are welcome to support its maintenance and updates: (link) -->
+  </div>
+</section>
+
+<section id="cite">
+  <div class="wrap">
+    <h2><span lang="en">Cite</span><span lang="zh">引用</span></h2>
+    <p class="before-cite" lang="en">When you use Heterra, please cite it as below, together with the paper of each method you use, linked above. Heterra shows the full reference in every tool's panel.</p>
+    <p class="before-cite" lang="zh">使用 Heterra 时,请按下面的格式引用软件,并引用你所用方法的论文(链接见上)。每个工具的面板里都有完整的文献信息。</p>
+    <p class="cite">Song, Y. (2026) Heterra: Advanced spatial analysis [software]. https://heterra.org</p>
+  </div>
+</section>
+
+<section id="feedback">
+  <div class="wrap">
+    <h2><span lang="en">Feedback</span><span lang="zh">反馈</span></h2>
+    <p class="cite" lang="en">If you have any suggestions, comments or questions, please email <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>.</p>
+    <p class="cite" lang="zh">如有任何建议、意见或问题,请发邮件到 <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>。</p>
+    <div class="subscribe" lang="en">
+      <h3>Subscribe to updates</h3>
+      <p class="before-cite">Want to hear about new versions and important fixes? Copy this, fill it in and send it to <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>, with the first line as the subject.</p>
+      <pre class="template">Subject: Subscribe to Heterra software update notifications
+Name:
+Position (e.g. professor, researcher, student):
+Institution:
+Country/Region:
+Main use (optional):</pre>
+      <div class="template-actions">
+        <button type="button" class="small-button copy" data-done="Copied">Copy</button>
+        <a class="small-button" href="mailto:yongzesong.heterra@gmail.com?subject=Subscribe%20to%20Heterra%20software%20update%20notifications&amp;body=Name%3A%0D%0APosition%20%28e.g.%20professor%2C%20researcher%2C%20student%29%3A%0D%0AInstitution%3A%0D%0ACountry/Region%3A%0D%0AMain%20use%20%28optional%29%3A%0D%0A">Open in email</a>
+      </div>
+      <p class="small">Your email address is used only to send Heterra updates. To unsubscribe, reply to any of them.</p>
+    </div>
+    <div class="subscribe" lang="zh">
+      <h3>订阅更新</h3>
+      <p class="before-cite">想收到新版本和重要修复的通知?复制下面的内容,填好后发到 <a href="mailto:yongzesong.heterra@gmail.com">yongzesong.heterra@gmail.com</a>,第一行作为邮件主题。</p>
+      <pre class="template">主题:订阅 Heterra 软件更新通知
+姓名:
+职位(如教授、研究人员、学生):
+单位:
+国家/地区:
+主要用途(可选):</pre>
+      <div class="template-actions">
+        <button type="button" class="small-button copy" data-done="已复制">复制</button>
+        <a class="small-button" href="mailto:yongzesong.heterra@gmail.com?subject=%E8%AE%A2%E9%98%85%20Heterra%20%E8%BD%AF%E4%BB%B6%E6%9B%B4%E6%96%B0%E9%80%9A%E7%9F%A5&amp;body=%E5%A7%93%E5%90%8D%3A%0D%0A%E8%81%8C%E4%BD%8D%28%E5%A6%82%E6%95%99%E6%8E%88%E3%80%81%E7%A0%94%E7%A9%B6%E4%BA%BA%E5%91%98%E3%80%81%E5%AD%A6%E7%94%9F%29%3A%0D%0A%E5%8D%95%E4%BD%8D%3A%0D%0A%E5%9B%BD%E5%AE%B6/%E5%9C%B0%E5%8C%BA%3A%0D%0A%E4%B8%BB%E8%A6%81%E7%94%A8%E9%80%94%28%E5%8F%AF%E9%80%89%29%3A%0D%0A">打开邮件</a>
+      </div>
+      <p class="small">邮箱只用于发送 Heterra 的更新通知。想退订,回复任意一封通知即可。</p>
+    </div>
+  </div>
+</section>
+
+<section id="history">
+  <div class="wrap">
+    <h2><span lang="en">Version history</span><span lang="zh">版本历史</span></h2>
+    <!-- Newest first. Add one <li> for each release. -->
+    <ul class="releases">
+      <li>
+        <span class="date"><time datetime="2026-11-07">2026-11-07</time></span>
+        <b>1.4.0</b>
+        <span lang="en">Windows version. Improved settings and tutorials.</span>
+        <span lang="zh">新增 Windows 版。改进了设置和教程。</span>
+      </li>
+      <li>
+        <span class="date"><time datetime="2026-11-05">2026-11-05</time></span>
+        <b>1.3.0</b>
+        <span lang="en">First public version. For Macs with Apple silicon.</span>
+        <span lang="zh">第一个公开版本。适用于 Apple 芯片的 Mac。</span>
+      </li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p lang="en">© 2026 Yongze Song. Software: GNU GPL 3.0 or later. Documentation and tutorial data: CC BY 4.0.</p>
+    <p lang="zh">© 2026 Yongze Song。软件:GNU GPL 第 3 版或更高。文档和教程数据:CC BY 4.0。</p>
+    <p lang="en">Free of charge. Licence: GPL-3.0-only. The source repository is private.</p>
+    <p lang="zh">免费软件。许可证:GPL-3.0-only。源代码仓库不公开。</p>
+    <p class="privacy" lang="en" hidden>This site uses Google Analytics, with cookies, to count visits and download clicks and to estimate visitors' countries.</p>
+    <p class="privacy" lang="zh" hidden>本网站使用 Google Analytics(含 Cookie)统计访问量和下载点击次数,并估算访问者所在的国家或地区。</p>
+  </div>
+</footer>
+
+<dialog class="viewer" aria-label="Screenshot"><img src="" alt=""></dialog>
+<dialog class="qr" id="qr-basic" aria-label="基础支持" lang="zh"><p>基础支持</p><img src="assets/shots/zh/sponsor-1.jpg" alt="基础支持二维码" width="403" height="409"></dialog>
+<dialog class="qr" id="qr-long" aria-label="长期支持" lang="zh"><p>长期支持</p><img src="assets/shots/zh/sponsor-2.jpg" alt="长期支持二维码" width="392" height="392"></dialog>
+
+<script>
+(function () {
+  var titles = { en: "Heterra: Advanced spatial analysis. One lightweight GIS app.", zh: "Heterra:前沿空间分析方法,一款轻量级 GIS 软件" };
+  function set(code) {
+    var root = document.documentElement;
+    root.setAttribute("data-lang", code);
+    root.lang = code === "zh" ? "zh-CN" : "en";
+    document.title = titles[code];
+  }
+  var saved = null;
+  try { saved = localStorage.getItem("lang"); } catch (e) {}
+  var asked = new URLSearchParams(location.search).get("lang");
+  var browser = (navigator.language || "").toLowerCase().indexOf("zh") === 0 ? "zh" : "en";
+  set(asked === "zh" || asked === "en" ? asked : saved || browser);
+  document.querySelectorAll(".lang button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var code = b.getAttribute("data-set");
+      set(code);
+      try { localStorage.setItem("lang", code); } catch (e) {}
+    });
+  });
+  // a click on a screenshot shows it at full size; without scripts the link opens the image
+  var viewer = document.querySelector(".viewer");
+  var large = viewer.querySelector("img");
+  document.querySelectorAll("a.zoom").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      large.src = a.getAttribute("href");
+      large.alt = a.querySelector("img").alt;
+      viewer.showModal();
+    });
+  });
+  viewer.addEventListener("click", function () { viewer.close(); });
+  document.querySelectorAll(".support-option").forEach(function (b) {
+    b.addEventListener("click", function () { document.getElementById(b.getAttribute("data-qr")).showModal(); });
+  });
+  document.querySelectorAll(".qr").forEach(function (qr) {
+    qr.addEventListener("click", function () { qr.close(); });
+  });
+  // a copy that cannot reach the clipboard selects the text, for copying by hand
+  document.querySelectorAll(".copy").forEach(function (b) {
+    var label = b.textContent;
+    b.addEventListener("click", function () {
+      var text = b.parentNode.previousElementSibling;
+      function select() { getSelection().selectAllChildren(text); }
+      if (!navigator.clipboard) { select(); return; }
+      navigator.clipboard.writeText(text.textContent).then(function () {
+        b.textContent = b.getAttribute("data-done");
+        setTimeout(function () { b.textContent = label; }, 1500);
+      }, select);
+    });
+  });
+  // Google Analytics: the Measurement ID (G-…). Only the published site counts, not a local preview.
+  var gaId = "G-LWFK7PEZYQ";
+  if (location.hostname === "heterra.org") {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag("js", new Date());
+    gtag("config", gaId);
+    var tag = document.createElement("script");
+    tag.async = true;
+    tag.src = "https://www.googletagmanager.com/gtag/js?id=" + gaId;
+    document.head.appendChild(tag);
+    document.querySelectorAll(".privacy").forEach(function (p) { p.hidden = false; });
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest("a[data-download]");
+      if (a) gtag("event", "HeterraDownload", {
+        version: a.getAttribute("data-download"),
+        page_language: document.documentElement.getAttribute("data-lang")
+      });
+    });
+  }
+})();
+</script>
+<script>
+// Downloads section: reads stats.json { updated, countries, sample?, daily: [{ date: "YYYY-MM-DD", count }] }.
+// The total is the sum of the daily counts, so the number and the chart cannot disagree.
+(function () {
+  var box = document.getElementById("reach");
+  var chart = document.getElementById("reach-chart");
+  var NS = "http://www.w3.org/2000/svg";
+  var HEIGHT = 280, TOP = 12, BOTTOM = 28, LEFT = 52, RIGHT = 30;
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var days = [];
+
+  function n(v) { return v.toLocaleString("en-US"); }
+  function axis(v) { return v >= 10000 ? n(v / 1000) + "K" : n(v); }
+  function parts(s) { var p = s.split("-"); return { y: +p[0], m: +p[1], d: +p[2] }; }
+  function time(s) { var p = parts(s); return Date.UTC(p.y, p.m - 1, p.d); }
+  function dateEn(s) { var p = parts(s); return MONTHS[p.m - 1] + " " + p.d; }
+  function dateZh(s) { var p = parts(s); return p.m + "月" + p.d + "日"; }
+
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e);
+    return e;
+  }
+  function label(parent, x, y, anchor, en, zh) {
+    el("text", { x: x, y: y, "text-anchor": anchor, lang: "en" }, parent).textContent = en;
+    el("text", { x: x, y: y, "text-anchor": anchor, lang: "zh" }, parent).textContent = zh;
+  }
+  // the top of the axis and its step: clean numbers, at most five intervals
+  function niceAxis(max) {
+    var power = Math.pow(10, Math.floor(Math.log10(max)));
+    var steps = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10];
+    for (var i = 0; i < steps.length; i++) {
+      var step = steps[i] * power;
+      if (step >= 1 && Math.ceil(max / step) <= 5) return { step: step, top: Math.ceil(max / step) * step };
+    }
+    return { step: max, top: max };
+  }
+
+  function draw() {
+    var width = chart.clientWidth;
+    if (!width || !days.length) return;
+    chart.textContent = "";
+    var svg = el("svg", { viewBox: "0 0 " + width + " " + HEIGHT, height: HEIGHT, role: "img",
+      "aria-label": n(days[days.length - 1].total) + " cumulative downloads" }, chart);
+    var first = days[0].t, last = days[days.length - 1].t;
+    var plotW = width - LEFT - RIGHT, base = HEIGHT - BOTTOM;
+    var scale = niceAxis(Math.max(days[days.length - 1].total, 1));
+    function X(t) { return last === first ? LEFT + plotW / 2 : LEFT + (t - first) / (last - first) * plotW; }
+    function Y(v) { return base - v / scale.top * (base - TOP); }
+
+    for (var v = 0; v <= scale.top + 1e-9; v += scale.step) {
+      el("line", { class: "reach-grid", x1: LEFT, x2: width - RIGHT, y1: Y(v), y2: Y(v) }, svg);
+      label(svg, LEFT - 10, Y(v) + 4, "end", axis(v), axis(v));
+    }
+    // labels counted back from the newest day, so the newest always has one
+    var room = Math.max(2, Math.floor(plotW / 84));
+    var every = Math.max(1, Math.ceil((days.length - 1) / (room - 1)));
+    for (var i = days.length - 1; i >= 0; i -= every) {
+      label(svg, X(days[i].t), HEIGHT - 8, "middle", dateEn(days[i].date), dateZh(days[i].date));
+    }
+
+    var points = days.map(function (d) { return X(d.t).toFixed(1) + "," + Y(d.total).toFixed(1); });
+    if (days.length > 1) {
+      el("polygon", { class: "reach-area", points: X(first) + "," + base + " " + points.join(" ") + " " + X(last) + "," + base }, svg);
+      el("polyline", { class: "reach-line", points: points.join(" ") }, svg);
+    }
+    var end = days[days.length - 1];
+    var cross = el("line", { class: "reach-cross", y1: TOP, y2: base, visibility: "hidden" }, svg);
+    var dot = el("circle", { class: "reach-dot", r: 5, cx: X(end.t), cy: Y(end.total) }, svg);
+
+    var tip = document.createElement("div");
+    tip.className = "reach-tip";
+    tip.hidden = true;
+    chart.appendChild(tip);
+
+    function point(e) {
+      var x = (e.clientX - svg.getBoundingClientRect().left);
+      var best = days[0];
+      days.forEach(function (d) { if (Math.abs(X(d.t) - x) < Math.abs(X(best.t) - x)) best = d; });
+      var px = X(best.t), py = Y(best.total);
+      cross.setAttribute("x1", px); cross.setAttribute("x2", px);
+      cross.setAttribute("visibility", "visible");
+      dot.setAttribute("cx", px); dot.setAttribute("cy", py);
+      tip.innerHTML = '<small><span lang="en">' + dateEn(best.date) + '</span><span lang="zh">' + dateZh(best.date) + "</span></small><br>" +
+        "<b>" + n(best.total) + '</b> <span lang="en">total</span><span lang="zh">累计</span><br>' +
+        "<small>+" + n(best.count) + ' <span lang="en">that day</span><span lang="zh">当天</span></small>';
+      tip.hidden = false;
+      var left = px + 12;
+      if (left + tip.offsetWidth > width) left = px - 12 - tip.offsetWidth;
+      var top = Math.max(0, Math.min(py - tip.offsetHeight - 10, base - tip.offsetHeight));
+      tip.style.transform = "translate(" + left + "px," + top + "px)";
+    }
+    function reset() {
+      cross.setAttribute("visibility", "hidden");
+      dot.setAttribute("cx", X(end.t)); dot.setAttribute("cy", Y(end.total));
+      tip.hidden = true;
+    }
+    chart.onpointermove = point;
+    chart.onpointerdown = point;
+    chart.onpointerleave = reset;
+
+    // the same numbers for screen readers
+    var table = document.createElement("table");
+    table.className = "reach-table";
+    days.forEach(function (d) {
+      var row = table.insertRow();
+      row.insertCell().textContent = d.date;
+      row.insertCell().textContent = n(d.total);
+    });
+    chart.appendChild(table);
+  }
+
+  fetch("stats.json", { cache: "no-cache" }).then(function (r) {
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }).then(function (data) {
+    var sum = 0;
+    days = (data.daily || []).slice().sort(function (a, b) { return time(a.date) - time(b.date); }).map(function (d) {
+      sum += d.count;
+      return { date: d.date, t: time(d.date), count: d.count, total: sum };
+    });
+    if (!days.length) return;
+    document.getElementById("reach-total").textContent = n(sum);
+    document.querySelectorAll(".reach-countries").forEach(function (b) { b.textContent = n(data.countries); });
+    var updated = document.getElementById("reach-updated");
+    updated.textContent = data.updated;
+    updated.setAttribute("datetime", data.updated);
+    document.getElementById("reach-sample").hidden = !data.sample;
+    box.hidden = false;
+    draw();
+    if (window.ResizeObserver) new ResizeObserver(function () {
+      if (chart.clientWidth !== +chart.getAttribute("data-w")) { chart.setAttribute("data-w", chart.clientWidth); draw(); }
+    }).observe(chart);
+  }).catch(function () { /* no numbers: the section stays hidden */ });
+})();
+</script>
+</body>
+</html>
