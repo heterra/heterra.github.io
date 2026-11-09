@@ -406,8 +406,6 @@ Main use (optional):</pre>
     <p lang="zh">© 2026 Yongze Song。软件:仅限 GNU GPL 第 3 版。文档和教程数据:CC BY 4.0。</p>
     <p lang="en">Free of charge. Licence: GPL-3.0-only. The source repository is private.</p>
     <p lang="zh">免费软件。许可证:GPL-3.0-only。源代码仓库不公开。</p>
-    <p class="privacy" lang="en" hidden>This site uses Google Analytics, with cookies, to count visits and download clicks and to estimate visitors' countries.</p>
-    <p class="privacy" lang="zh" hidden>本网站使用 Google Analytics(含 Cookie)统计访问量和下载点击次数,并估算访问者所在的国家或地区。</p>
   </div>
 </footer>
 
@@ -478,7 +476,6 @@ Main use (optional):</pre>
     tag.async = true;
     tag.src = "https://www.googletagmanager.com/gtag/js?id=" + gaId;
     document.head.appendChild(tag);
-    document.querySelectorAll(".privacy").forEach(function (p) { p.hidden = false; });
     document.addEventListener("click", function (e) {
       var a = e.target.closest("a[data-download]");
       if (a) gtag("event", "HeterraDownload", {
