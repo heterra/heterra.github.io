@@ -22,7 +22,6 @@
 .reach-places { margin: 0; font-size: 18px; line-height: 1.4; color: var(--text); }
 .reach-places b { font-weight: 600; color: var(--heading); }
 .reach-updated { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
-.reach-sample { display: inline-block; margin: 10px 0 0; padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; color: var(--muted); }
 .reach-chart { position: relative; margin-top: 8px; touch-action: pan-y; }
 .reach-chart svg { display: block; width: 100%; }
 .reach-chart text { font: 400 13px var(--sans); fill: var(--muted); font-variant-numeric: tabular-nums; }
@@ -436,7 +435,6 @@ Main use (optional):</pre>
       <p class="reach-places" lang="en">from <b class="reach-countries"></b> countries and regions</p>
       <p class="reach-places" lang="zh">来自 <b class="reach-countries"></b> 个国家和地区</p>
       <p class="reach-updated"><span lang="en">Updated </span><span lang="zh">更新于 </span><time id="reach-updated"></time></p>
-      <p class="reach-sample" id="reach-sample" hidden><span lang="en">Preview: the number and chart are sample data</span><span lang="zh">预览:数字和图是示例数据</span></p>
     </div>
     <div>
       <p class="reach-chart-title"><span lang="en">Cumulative users by day</span><span lang="zh">每日累计用户数</span></p>
@@ -448,8 +446,8 @@ Main use (optional):</pre>
 
 <footer>
   <div class="wrap">
-    <p lang="en">© 2026 Yongze Song. Software: GNU GPL 3.0 or later. Documentation and tutorial data: CC BY 4.0.</p>
-    <p lang="zh">© 2026 Yongze Song。软件:GNU GPL 第 3 版或更高。文档和教程数据:CC BY 4.0。</p>
+    <p lang="en">© 2026 Yongze Song. Software: GNU GPL 3.0 only. Documentation and tutorial data: CC BY 4.0.</p>
+    <p lang="zh">© 2026 Yongze Song。软件:仅限 GNU GPL 第 3 版。文档和教程数据:CC BY 4.0。</p>
     <p lang="en">Free of charge. Licence: GPL-3.0-only. The source repository is private.</p>
     <p lang="zh">免费软件。许可证:GPL-3.0-only。源代码仓库不公开。</p>
     <p class="privacy" lang="en" hidden>This site uses Google Analytics, with cookies, to count visits and download clicks and to estimate visitors' countries.</p>
@@ -536,7 +534,7 @@ Main use (optional):</pre>
 })();
 </script>
 <script>
-// Users section: reads stats.json { updated, countries, sample?, daily: [{ date: "YYYY-MM-DD", count }] }.
+// Users section: reads stats.json { updated, countries, daily: [{ date: "YYYY-MM-DD", count }] }.
 // The total is the sum of the daily counts, so the number and the chart cannot disagree.
 (function () {
   var box = document.getElementById("reach");
@@ -663,7 +661,6 @@ Main use (optional):</pre>
     var updated = document.getElementById("reach-updated");
     updated.textContent = data.updated;
     updated.setAttribute("datetime", data.updated);
-    document.getElementById("reach-sample").hidden = !data.sample;
     box.hidden = false;
     draw();
     if (window.ResizeObserver) new ResizeObserver(function () {
