@@ -37,7 +37,7 @@ def report(client, prop, dimension, metric):
 
 
 def daily_counts(rows):
-    """New users per day add up to the users so far; a day's users would count returning visitors again.
+    """Sessions per day add up to the users so far: every visit to the site counts, returning visitors included.
     Analytics leaves out days with none; they are put back as zeros so each day has a point."""
     counts = {datetime.datetime.strptime(d, "%Y%m%d").date(): n for d, n in rows if n > 0}
     day, last = min(counts), max(counts)
@@ -56,12 +56,12 @@ def country_count(rows):
 def main():
     client = BetaAnalyticsDataClient.from_service_account_info(json.loads(os.environ["GA_SERVICE_ACCOUNT_JSON"]))
     prop = os.environ["GA_PROPERTY_ID"].strip()
-    new_users = report(client, prop, "date", "newUsers")
+    sessions = report(client, prop, "date", "sessions")
     countries = report(client, prop, "country", "totalUsers")
     # no data means something is wrong with the query or the access; keep the numbers already published
-    if not any(n > 0 for _, n in new_users) or country_count(countries) == 0:
+    if not any(n > 0 for _, n in sessions) or country_count(countries) == 0:
         sys.exit("Analytics returned no users or no countries; stats.json is unchanged")
-    days = daily_counts(new_users)
+    days = daily_counts(sessions)
     stats = {
         "updated": datetime.datetime.now(datetime.timezone.utc).date().isoformat(),
         "countries": country_count(countries),
