@@ -26,10 +26,16 @@
       <a href="#download"><span lang="en">Download</span><span lang="zh">下载</span></a>
       <a href="#feedback"><span lang="en">Feedback</span><span lang="zh">反馈</span></a>
     </nav>
-    <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-set="en">EN</button>
-      <button type="button" data-set="zh">中</button>
-    </div>
+    <select class="lang" aria-label="Language">
+      <option value="en">English</option>
+      <option value="zh" lang="zh-CN">简体中文</option>
+      <option value="zh-Hant" lang="zh-Hant">繁體中文</option>
+      <option value="fr" lang="fr">Français</option>
+      <option value="es" lang="es">Español</option>
+      <option value="pt-BR" lang="pt-BR">Português</option>
+      <option value="ja" lang="ja">日本語</option>
+      <option value="ko" lang="ko">한국어</option>
+    </select>
   </div>
 </header>
 
@@ -319,15 +325,6 @@
         <li lang="zh"><b>"Windows 已保护你的电脑"。</b>点击"更多信息",再点击"仍要运行"。</li>
       </ul>
     </div>
-    <div class="support" lang="zh">
-      <p>软件免费使用,无需注册。若它对你的工作有帮助,欢迎自愿支持后续维护与更新:</p>
-      <div class="support-options">
-        <button type="button" class="support-option" data-qr="qr-basic"><b>基础支持</b><span>你的赞助将用于项目的日常维护和持续更新。</span></button>
-        <button type="button" class="support-option" data-qr="qr-long"><b>长期支持</b><span>你的赞助将用于支持项目的长期维护与发展。</span></button>
-      </div>
-    </div>
-    <!-- When the sponsors page exists, add its link above, and an English line:
-         Heterra is free. If it helps your work, you are welcome to support its maintenance and updates: (link) -->
   </div>
 </section>
 
@@ -416,29 +413,59 @@ Main use (optional):</pre>
 </footer>
 
 <dialog class="viewer" aria-label="Screenshot"><img src="" alt=""></dialog>
-<dialog class="qr" id="qr-basic" aria-label="基础支持" lang="zh"><p>基础支持</p><img src="assets/shots/zh/sponsor-1.jpg" alt="基础支持二维码" width="403" height="409"></dialog>
-<dialog class="qr" id="qr-long" aria-label="长期支持" lang="zh"><p>长期支持</p><img src="assets/shots/zh/sponsor-2.jpg" alt="长期支持二维码" width="392" height="392"></dialog>
 
 <script>
 (function () {
-  var titles = { en: "Heterra: Advanced spatial analysis. One lightweight GIS app.", zh: "Heterra:前沿空间分析方法,一款轻量级 GIS 软件" };
+  // English and Simplified Chinese are written in the page. The other six languages come from
+  // assets/i18n/<code>.js, { English html: translated html }, and take the place of the English text;
+  // a text without a translation stays in English. Screenshots and the email template stay in English.
+  var LANGS = { en: "en", zh: "zh-CN", "zh-Hant": "zh-Hant", fr: "fr", es: "es", "pt-BR": "pt-BR", ja: "ja", ko: "ko" };
+  var titleEn = document.title, titleZh = "Heterra:前沿空间分析方法,一款轻量级 GIS 软件";
+  var root = document.documentElement, picker = document.querySelector(".lang");
+  var texts = [].slice.call(document.querySelectorAll(
+    'body [lang="en"]:not(.zoom):not(.subscribe), .subscribe[lang="en"] > h3, .subscribe[lang="en"] > p, .subscribe[lang="en"] .copy'));
+  texts.forEach(function (e) { e._en = e.innerHTML; });
+  var tables = window.heterraTables = window.heterraTables || {}, current = "en";
+  function key(html) { return html.replace(/\s+/g, " ").trim(); }
+  // for text made by scripts; window.heterraMissing lists what the current language lacks
+  window.heterraText = function (en) {
+    var t = tables[current];
+    if (t && !t[key(en)]) window.heterraMissing.push(key(en));
+    return t && t[key(en)] || en;
+  };
+  function show(code) {
+    current = code;
+    window.heterraMissing = [];
+    root.setAttribute("data-lang", code === "zh" ? "zh" : "en");
+    root.setAttribute("data-ui", code);
+    root.lang = LANGS[code];
+    texts.forEach(function (e) { e.innerHTML = window.heterraText(e._en); });
+    document.title = code === "zh" ? titleZh : window.heterraText(titleEn);
+    picker.value = code;
+    document.dispatchEvent(new Event("heterra-language"));
+  }
   function set(code) {
-    var root = document.documentElement;
-    root.setAttribute("data-lang", code);
-    root.lang = code === "zh" ? "zh-CN" : "en";
-    document.title = titles[code];
+    if (!LANGS[code]) code = "en";
+    if (code === "en" || code === "zh" || tables[code]) { show(code); return; }
+    // a script, not fetch: it also loads when the page is opened as a file
+    var s = document.createElement("script");
+    s.src = "assets/i18n/" + code + ".js";
+    s.onload = function () { show(tables[code] ? code : "en"); };
+    s.onerror = function () { show("en"); };
+    document.head.appendChild(s);
+  }
+  function fromBrowser() {
+    var l = (navigator.language || "").toLowerCase();
+    if (l.indexOf("zh") === 0) return /hant|tw|hk|mo/.test(l) ? "zh-Hant" : "zh";
+    return { fr: "fr", es: "es", pt: "pt-BR", ja: "ja", ko: "ko" }[l.slice(0, 2)] || "en";
   }
   var saved = null;
   try { saved = localStorage.getItem("lang"); } catch (e) {}
   var asked = new URLSearchParams(location.search).get("lang");
-  var browser = (navigator.language || "").toLowerCase().indexOf("zh") === 0 ? "zh" : "en";
-  set(asked === "zh" || asked === "en" ? asked : saved || browser);
-  document.querySelectorAll(".lang button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      var code = b.getAttribute("data-set");
-      set(code);
-      try { localStorage.setItem("lang", code); } catch (e) {}
-    });
+  set(LANGS[asked] ? asked : LANGS[saved] ? saved : fromBrowser());
+  picker.addEventListener("change", function () {
+    set(picker.value);
+    try { localStorage.setItem("lang", picker.value); } catch (e) {}
   });
   // a click on a screenshot shows it at full size; without scripts the link opens the image
   var viewer = document.querySelector(".viewer");
@@ -452,12 +479,6 @@ Main use (optional):</pre>
     });
   });
   viewer.addEventListener("click", function () { viewer.close(); });
-  document.querySelectorAll(".support-option").forEach(function (b) {
-    b.addEventListener("click", function () { document.getElementById(b.getAttribute("data-qr")).showModal(); });
-  });
-  document.querySelectorAll(".qr").forEach(function (qr) {
-    qr.addEventListener("click", function () { qr.close(); });
-  });
   // a copy that cannot reach the clipboard selects the text, for copying by hand
   document.querySelectorAll(".copy").forEach(function (b) {
     var label = b.textContent;
@@ -466,8 +487,8 @@ Main use (optional):</pre>
       function select() { getSelection().selectAllChildren(text); }
       if (!navigator.clipboard) { select(); return; }
       navigator.clipboard.writeText(text.textContent).then(function () {
-        b.textContent = b.getAttribute("data-done");
-        setTimeout(function () { b.textContent = label; }, 1500);
+        b.textContent = window.heterraText(b.getAttribute("data-done"));
+        setTimeout(function () { b.textContent = b._en ? window.heterraText(b._en) : label; }, 1500);
       }, select);
     });
   });
@@ -486,7 +507,7 @@ Main use (optional):</pre>
       var a = e.target.closest("a[data-download]");
       if (a) gtag("event", "HeterraDownload", {
         version: a.getAttribute("data-download"),
-        page_language: document.documentElement.getAttribute("data-lang")
+        page_language: document.documentElement.getAttribute("data-ui")
       });
     });
   }
