@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heterra guide: spatial analysis on your own data, step by step</title>
+<meta name="description" content="A step-by-step guide to Heterra: add your data, run each of the nine spatial analysis methods, read the figures and tables, and report them in a paper. With exercises.">
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="guide/guide.css">
+</head>
+<body data-page="start" data-base="">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a class="here" href="guide.html">Guide</a>
+      <a href="index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p>Chapters: <a href="guide/opgd.html">OPGD</a>, <a href="guide/lisp.html">LISP</a>, <a href="guide/gc.html">GC</a>, <a href="guide/sda.html">SDA</a>, <a href="guide/sdo.html">SDO</a>, <a href="guide/gcf.html">GCF</a>, <a href="guide/gos.html">GOS</a>, <a href="guide/dsi.html">DSI</a>, <a href="guide/sie.html">SIE</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb data">Heterra guide · Part 1</p>
+  <h1>Getting started with Heterra</h1>
+  <p class="sub">From your own data to figures and tables you can put in a paper, one method at a time.</p>
+
+  <div class="glance">
+    <div><h4>Who it is for</h4>Researchers and students who have spatial data and want to run a method on it without writing code.</div>
+    <div><h4>What you need</h4>Heterra 1.6.0 on a Mac or a Windows PC, and about 20 minutes for this part. Each method chapter takes 20 to 40 minutes.</div>
+    <div><h4>What you get</h4>For each method: what it answers, the steps in Heterra, how to read and report every result, and exercises.</div>
+  </div>
+
+  <h2 id="guide" data-nav="How this guide works">How this guide works</h2>
+  <p>The guide has five parts. This part introduces the software. Parts 2 to 5 are the four groups of methods; each method is one chapter, and every chapter has the same four sections:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What you find there</th></tr>
+    <tr><td><b>1 The method</b></td><td>The question the method answers, the idea behind it in plain words, and when to use it.</td></tr>
+    <tr><td><b>2 In Heterra</b></td><td>How to prepare your data, the example step by step with screenshots, and what changes with your own data.</td></tr>
+    <tr><td><b>3 Reading the results</b></td><td>Every figure and table: what it shows, how to read it, and a model sentence for a paper.</td></tr>
+    <tr><td><b>4 Exercises</b></td><td>Short tasks on the example and on your own data, with answers.</td></tr>
+  </table></div>
+  <p>Every chapter uses the example that ships with Heterra, so you can repeat each step and compare your screen with the pictures. Several examples use simulated data: their numbers illustrate the tool and do not describe a real study.</p>
+
+  <h2 id="choose" data-nav="Which method?">Which method answers my question?</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Your question</th><th>Method</th><th>Chapter</th></tr>
+    <tr><td>Which factors explain the spatial pattern of my variable, and how do they interact?</td><td>OPGD</td><td><a href="guide/opgd.html">1</a></td></tr>
+    <tr><td>Where does each variable explain the response, and how strongly at each place?</td><td>LISP</td><td><a href="guide/lisp.html">2</a></td></tr>
+    <tr><td>Where does a variable break the smooth pattern of its surroundings?</td><td>GC</td><td><a href="guide/gc.html">3</a></td></tr>
+    <tr><td>Do the values of covariates around a sample, not only at it, improve a prediction?</td><td>SDA</td><td><a href="guide/sda.html">4</a></td></tr>
+    <tr><td>Do local anomalies of covariates around a sample improve a prediction?</td><td>SDO</td><td><a href="guide/sdo.html">5</a></td></tr>
+    <tr><td>Can spatial-pattern and neighbourhood features of covariates improve a prediction map?</td><td>GCF</td><td><a href="guide/gcf.html">6</a></td></tr>
+    <tr><td>What is the value at unsampled places, and how uncertain is it?</td><td>GOS</td><td><a href="guide/gos.html">7</a></td></tr>
+    <tr><td>How much of the spatial structure of the data have my models absorbed?</td><td>DSI</td><td><a href="guide/dsi.html">8</a></td></tr>
+    <tr><td>How much of the spatial information in the data do my prediction models explain?</td><td>SIE</td><td><a href="guide/sie.html">9</a></td></tr>
+  </table></div>
+
+  <div class="cards">
+    <a class="card" href="guide/opgd.html"><p class="group-name heterogeneity">Part 2 · Spatial heterogeneity</p><b>OPGD · LISP</b><span>What explains a spatial pattern, over the whole area and at each location.</span></a>
+    <a class="card" href="guide/gc.html"><p class="group-name pattern">Part 3 · Spatial pattern</p><b>GC · SDA · SDO</b><span>Complexity, neighbourhood quantiles and local outliers as new information.</span></a>
+    <a class="card" href="guide/gcf.html"><p class="group-name prediction">Part 4 · Spatial prediction</p><b>GCF · GOS</b><span>Prediction maps with cross-validation and uncertainty.</span></a>
+    <a class="card" href="guide/dsi.html"><p class="group-name evaluation">Part 5 · Model evaluation</p><b>DSI · SIE</b><span>Judge models by the spatial structure they explain, beside their accuracy.</span></a>
+  </div>
+
+  <h2 id="install" data-nav="Install">Install Heterra</h2>
+  <p>Heterra is free. <a href="index.html#download">Download it from the home page</a>.</p>
+  <ul>
+    <li><b>Mac</b> (Apple silicon, macOS 13 or later): open the .dmg and drag Heterra to Applications. macOS blocks it the first time: open System Settings → Privacy &amp; Security and choose Open Anyway.</li>
+    <li><b>Windows</b> 10 or 11 (64-bit): double-click the installer. If "Windows protected your PC" appears, click More info, then Run anyway.</li>
+  </ul>
+  <p>No R or Python is needed.</p>
+
+  <h3>Languages</h3>
+  <p>The interface of Heterra is available in eight languages:</p>
+  <div class="table-wrap"><table>
+    <tr><td>English</td><td>简体中文 <span class="lang-en">Simplified Chinese</span></td><td>繁體中文 <span class="lang-en">Traditional Chinese</span></td><td>Français <span class="lang-en">French</span></td></tr>
+    <tr><td>Español <span class="lang-en">Spanish</span></td><td>Português <span class="lang-en">Portuguese (Brazil)</span></td><td>日本語 <span class="lang-en">Japanese</span></td><td>한국어 <span class="lang-en">Korean</span></td></tr>
+  </table></div>
+  <p>Heterra asks for the language in the welcome window of the first start. If you do not choose, it follows the language of your system, and uses English when the system's language is not one of the eight. To change it later, open <span class="ui">Settings</span> → <span class="ui">Language</span>, choose and confirm: Heterra restarts in the new language, so save your project first. This guide shows the English interface. Reports are always written in English.</p>
+  <figure class="shot">
+    <img src="guide/img/intro/welcome.webp" loading="lazy" alt="Heterra's welcome window with one card per method">
+    <figcaption>The welcome window. Each card loads a method's example, fills in the settings and checks the result against R.</figcaption>
+  </figure>
+
+  <h2 id="window" data-nav="The window">The window</h2>
+  <figure class="shot">
+    <img src="guide/img/intro/tool.webp" width="1800" height="1152" loading="lazy" alt="Heterra's main window with the OPGD tool open">
+    <figcaption>The main window with a tool open: layers and Toolbox on the left, the map in the middle, the tool's panel on the right.</figcaption>
+  </figure>
+  <div class="table-wrap"><table>
+    <tr><th>Where</th><th>What it is for</th></tr>
+    <tr><td><b>Toolbar</b>, left</td><td>New, open and save a project; <span class="ui">Add Data</span>; the map tools (pan, zoom, identify, select).</td></tr>
+    <tr><td><b>Toolbar</b>, coloured buttons</td><td>The nine methods, in the colours of their groups. The same tools are in the Toolbox.</td></tr>
+    <tr><td><b>Toolbar</b>, right</td><td>The five pages: <span class="ui">Map</span>, <span class="ui">Layout</span>, <span class="ui">Table</span>, <span class="ui">Chart</span>, <span class="ui">Tools</span>.</td></tr>
+    <tr><td><b>Layers / History</b></td><td>The layers of the project. <span class="ui">History</span> lists every run, so earlier results can be opened again.</td></tr>
+    <tr><td><b>Toolbox</b></td><td>The methods in four groups, and the data tools.</td></tr>
+    <tr><td><b>Panel</b>, right</td><td>What the page needs: a tool's steps, a layer's style, a chart's export buttons.</td></tr>
+  </table></div>
+
+  <h2 id="data" data-nav="Add your data">Add your data</h2>
+  <p>Click <span class="ui">Add Data</span>, or drop files on the map. Heterra opens Shapefile, GeoPackage, GeoJSON, GeoTIFF, File Geodatabase (.gdb folder) and CSV with coordinate columns.</p>
+  <h3>A table for the methods</h3>
+  <p>Every method works on an attribute table: one row per location (a point, a polygon or a grid cell), one column per variable. Before you start, check three things:</p>
+  <ul>
+    <li><b>Numbers are numbers.</b> A column with a stray text cell is read as text, and Heterra tells you which cell. Missing values are empty cells.</li>
+    <li><b>Coordinates are known.</b> For a CSV, choose the two coordinate columns and their coordinate system when you add it (for longitude and latitude: EPSG:4326). Some methods need longitude and latitude, others projected coordinates; each chapter says which.</li>
+    <li><b>Names are simple.</b> Column names and category values are best written with English letters, digits and underscores. This is a recommendation: Heterra also reads other characters.</li>
+  </ul>
+  <h3>Data tools</h3>
+  <p>The Toolbox's <span class="ui">Data tools</span> prepare a layer without leaving Heterra:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Tool</th><th>Use</th></tr>
+    <tr><td>CSV → points</td><td>Saves a CSV with coordinate columns as a point layer.</td></tr>
+    <tr><td>Reproject</td><td>Transforms a vector layer to another coordinate system.</td></tr>
+    <tr><td>Raster → grid table</td><td>Turns rasters into a point layer of cell centres, one field per band: the grid that the prediction methods take.</td></tr>
+    <tr><td>Join</td><td>Adds the fields of a table to a layer where the key fields are equal.</td></tr>
+    <tr><td>Field calculator</td><td>Computes a new numeric field from an expression, for example a log transform.</td></tr>
+    <tr><td>Clip</td><td>Keeps what lies inside an extent or inside the polygons of another layer.</td></tr>
+  </table></div>
+  <h3>Look at the data first</h3>
+  <p>Select a layer to style it in the panel: single symbol, categories or graduated colours, with RColorBrewer palettes. The <span class="ui">Table</span> page shows the attribute table with a summary of every field (count, missing, mean, minimum and maximum), a quick way to find a column that was read as text or has missing values.</p>
+  <figure class="shot">
+    <img src="guide/img/intro/tablepage.webp" width="1800" height="1152" loading="lazy" alt="The Table page: the attribute table and a summary of each field">
+    <figcaption>The <b>Table</b> page: the rows in the middle, a summary of every field on the right, and <b>Export CSV</b>.</figcaption>
+  </figure>
+
+  <h2 id="run" data-nav="Run a method">Run a method</h2>
+  <p>Every method is run the same way:</p>
+  <ol>
+    <li><b>Open the tool</b> from the Toolbox or the toolbar. Its panel shows a short description and the reference to cite.</li>
+    <li><b>Try the example first.</b> Click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>: the data are loaded and the settings filled in. <span class="ui">Guide</span> opens the example's own notes.</li>
+    <li><b>Go through the steps.</b> The panel is divided into numbered steps. <span class="ui">Next</span> moves on; <span class="ui">Run</span> appears only at the steps that compute. Settings that rarely change are under <span class="ui">Advanced</span>.</li>
+    <li><b>Run.</b> If a setting is still missing, a line beside the button says which one and at which step.</li>
+    <li><b>Read the results.</b> The main figure opens on the Chart page; the panel lists all outputs.</li>
+  </ol>
+  <p>With your own data the steps are the same: add your layer, open the tool (without the tutorial) and choose your layer and fields in step 1.</p>
+  <p class="note"><span class="label">Checked against R</span>After an example runs, a green line in the panel says whether the results match the reference results computed with the method's R implementation. It is a check of the software on your computer; it appears for the examples only.</p>
+
+  <h2 id="results" data-nav="Find the results">Find the results</h2>
+  <figure class="shot">
+    <img src="guide/img/intro/chartpage.webp" width="1800" height="1152" loading="lazy" alt="The Chart page with the list of charts of a run and the export buttons">
+    <figcaption>The <b>Chart</b> page after a run: the charts of the run and the export buttons in the panel on the right.</figcaption>
+  </figure>
+  <p>A run gives three kinds of results:</p>
+  <ul>
+    <li><b>Figures</b>, on the <span class="ui">Chart</span> page. The menu above the figure and the list in the panel switch between them. Most methods have a main figure that opens first.</li>
+    <li><b>Tables</b>, on the <span class="ui">Table</span> page.</li>
+    <li><b>New fields or layers</b>, on the <span class="ui">Map</span> page: for example the strata of OPGD or a prediction over a grid. They are layers like any other and can be styled and exported.</li>
+  </ul>
+  <p>In a tool's panel, <span class="ui">Outputs</span> lists them all; entries that begin with "Figure" or "Table" open that figure or table. Under <span class="ui">Results</span>, the panel also writes a few sentences about the run in plain words; a click on a sentence opens the figure it speaks about.</p>
+  <p>Every run is kept in <span class="ui">History</span> (beside Layers), with its settings. Run a method twice with different settings and both results stay available.</p>
+
+  <h2 id="export" data-nav="Export for a paper">Export for a paper</h2>
+  <div class="table-wrap"><table>
+    <tr><th>What</th><th>Where</th><th>Formats</th></tr>
+    <tr><td>A figure</td><td><span class="ui">Chart</span> page → Export</td><td>PDF and SVG (vector), PNG at 300 dpi, and <span class="ui">Data CSV</span>: the numbers behind the figure</td></tr>
+    <tr><td>A table</td><td><span class="ui">Table</span> page → Export CSV</td><td>CSV</td></tr>
+    <tr><td>A map or a page of maps and charts</td><td><span class="ui">Layout</span> page → Export</td><td>PDF, SVG, PNG and TIFF at 300 or 600 dpi</td></tr>
+    <tr><td>A layer with its result fields</td><td>Right-click the layer → Export Layer</td><td>Shapefile, GeoPackage, GeoJSON, CSV</td></tr>
+    <tr><td>A report of a run</td><td>The tool's panel → <span class="ui">Export results</span></td><td>DOCX, PDF, LaTeX</td></tr>
+  </table></div>
+  <figure class="shot">
+    <img src="guide/img/opgd/win-layout.webp" width="1800" height="1152" loading="lazy" alt="The Layout page with a map, its legend, scale bar and north arrow, and the export buttons">
+    <figcaption>The <b>Layout</b> page: page size, template (one map, 1 × 2 or 2 × 2 panels), legend, scale bar, north arrow, and export.</figcaption>
+  </figure>
+  <p>Three points help when a figure goes into a manuscript:</p>
+  <ul>
+    <li><b>Prefer vector formats.</b> PDF and SVG stay sharp at any size and can be edited in a drawing program. Use PNG or TIFF when the journal asks for images.</li>
+    <li><b>Keep the data.</b> Save the Data CSV with each figure: reviewers ask for numbers, and you may want to redraw a figure in your own style.</li>
+    <li><b>Use the report as a draft.</b> The report of a run has four parts: method, analysis steps, results (with numbered figures and tables and a sentence of interpretation each), and references. It is a starting text to edit, not a finished section.</li>
+  </ul>
+  <p>Save the project (a <code>.heterra</code> folder) to keep the layers, runs and results together. An unsaved project lives in a temporary folder.</p>
+
+  <h2 id="report" data-nav="Report and cite">Report and cite</h2>
+  <p>When you write up a result, give the reader what they need to repeat it:</p>
+  <ul>
+    <li>the data: number of units, the response and the variables;</li>
+    <li>the settings you changed from the defaults (every chapter names the ones that matter);</li>
+    <li>the software and its version, and the paper of the method.</li>
+  </ul>
+  <div class="paper"><span class="label">In a paper</span><p>"The analysis was run in Heterra 1.6.0 (Song 2026), which implements the optimal parameters-based geographical detector (Song et al. 2020)."</p></div>
+  <p>Cite the software as: <span class="cite" style="display:block;margin-top:8px">Song, Y. (2026) Heterra: Advanced spatial analysis [software]. https://heterra.org</span></p>
+  <p style="margin-top:12px">Each tool's panel shows the full reference of its method with a <span class="ui">Copy</span> button, and each chapter of this guide ends with the references.</p>
+
+  <h2 id="exercises" data-nav="Exercises">Exercises</h2>
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Explore</span></h4>
+    <p>Open the OPGD tutorial and click <span class="ui">Load Example</span>, but do not run it. On the Table page, find the field with the largest maximum. How many rows and fields does the layer have?</p>
+    <details><summary>Answer</summary><p>GDP has the largest maximum (16,589). The layer "Simulated cells" has 713 rows and 10 fields.</p></details>
+  </div>
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Export</span></h4>
+    <p>Run the OPGD example. Export the feature figure as PDF and its Data CSV. Then open the Factor detector figure from the Outputs list and export it as PNG.</p>
+    <details><summary>Checklist</summary><p>You should have three files. Open the PDF and zoom in: the text stays sharp, because it is a vector file. The CSV holds one block of rows per panel of the figure.</p></details>
+  </div>
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Your data</span></h4>
+    <p>Add one of your own layers. Check on the Table page that every variable you plan to use is numeric and note how many values are missing. Style the layer by your response variable with graduated colours.</p>
+    <details><summary>Checklist</summary><p>If a numeric column was read as text, correct the cell Heterra names and add the file again. If the layer has no coordinate system, give it one when adding it, or the map and the distance-based methods cannot place it.</p></details>
+  </div>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide/guide.js"></script>
+</body>
+</html>

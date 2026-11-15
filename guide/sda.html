@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDA · Heterra guide</title>
+<meta name="description" content="How to run the second dimension of spatial association (SDA) in Heterra on your own data, read its figures and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="sda" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb pattern">Part 3 · Spatial pattern · Chapter 4</p>
+  <h1>SDA</h1>
+  <p class="sub">Second dimension of spatial association</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>Does what surrounds a sample, and not only what lies at the sample, help to predict my variable, and by how much?</div>
+    <div><h4>You need</h4>Two layers: samples with a numeric response y, and a grid of cells around them with the covariates as fields.</div>
+    <div><h4>You get</h4>New variables from each covariate's neighbourhood, the stable ones among them, prediction maps with and without them, and a cross-validation of their gain.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>A covariate read at a sample's location says nothing about what surrounds it. SDA (Song 2022) summarises each covariate in the grid cells around every sample. Each buffer radius and each quantile gives one new variable:</p>
+  <p class="note">SDA variable = the quantile τ of a covariate over the grid cells closer than b km to the sample<br>b is the buffer radius (the searching range) and τ lies between 0 and 1: τ = 0 is the minimum of the neighbourhood, 0.5 its median, 1 its maximum. The variable is named after all three, for example <code>NDVI_b5t0.3</code>.</p>
+  <p>The variables multiply quickly: 8 covariates × 5 buffers × 11 quantiles = 440 in the example. Most of them carry the same information, so SDA in Heterra has three parts, and the last one is the test.</p>
+
+  <figure class="paper-fig">
+    <img src="img/sda/paper-concept.webp" width="1500" height="1005" style="width: 600px" loading="lazy" alt="Concept of SDA: in the first dimension a sample is linked to covariate values at points; in the second dimension it is linked to all the covariate data in an area around it">
+    <figcaption><b>How the method works.</b> Above, the first dimension: the response at a sample is linked to covariate values at the same points. Below, the second dimension: a cone opens from the sample onto the covariate surface, and the data inside the circle are summarised. In this way, locations that were never sampled enter the model. Source: Song (2022), Fig. 1.</figcaption>
+  </figure>
+
+  <h3>The three parts</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Part</th><th>Question</th><th>Result</th></tr>
+    <tr><td>Scales</td><td>What does each covariate look like around every sample?</td><td>One variable per covariate, buffer and quantile, and a catalogue that says what each one measures</td></tr>
+    <tr><td>Variable selection</td><td>Which of them are ranked highly in a stable way?</td><td>At most one variable per covariate, chosen with the selection of GCF: random forests on resampled spatial blocks</td></tr>
+    <tr><td>Prediction and cross-validation</td><td>What do they change on the map, and do they predict better?</td><td>Maps from a random forest with the raw covariates (the baseline, X) and with the selected variables added (X + SDA); R² of both in spatial and random folds</td></tr>
+  </table></div>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You predict a variable at samples from gridded covariates and suspect that the surroundings matter.</li>
+    <li>You do not know at which distance they matter: the selection reports the searching range b and the quantile τ of each variable it keeps.</li>
+    <li>You want an honest answer to "do the new variables help?": the baseline is always shown beside them.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Soil geochemistry</td><td>Concentration of Cr and Cu in soil</td><td>Soil sample point</td><td>Song (2022)</td></tr>
+    <tr><td>Urban parks</td><td>Sentiment score from volunteered text</td><td>Urban park</td><td>Wang et al. (2026)</td></tr>
+    <tr><td>Crop production</td><td>Wheat production</td><td>Local government area</td><td>Ren, Song and Yu (2026), with outliers in place of quantiles: see <a href="sdo.html">SDO</a></td></tr>
+  </table></div>
+  <p>Any response measured at locations fits, if a dense grid of covariates covers the area around them.</p>
+
+  <p class="warn"><span class="label">Keep in mind</span>A selected variable is stable, and stability is not evidence of prediction. Whether the variables help is the cross-validation's question, and its answer can be "not clearly". R² is always 1 − SSE/SST.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>Two layers (<a href="../guide.html#data">Part 1</a> shows how to add data). The samples have one row per observation. The grid has cells around the samples, with the covariates as fields.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Layer or field</th><th>Type</th><th>In the example</th></tr>
+    <tr><td>Samples</td><td>Points, polygons or, since version 1.6.0, a table</td><td>894 soil Zn samples</td></tr>
+    <tr><td>Response y</td><td>Number, in the samples</td><td><code>log_Zn</code> = log(Zn), prepared as a field, because SDA does not transform y</td></tr>
+    <tr><td>Grid</td><td>Grid cells, points or polygons</td><td>13,132 cells of 1 km</td></tr>
+    <tr><td>Covariates</td><td>Numbers, fields of the grid</td><td><code>Elevation</code>, <code>Slope</code>, <code>Aspect</code>, <code>Water</code>, <code>NDVI</code>, <code>pH</code>, <code>SOC</code>, <code>Road</code></td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>sda_boundary</code>: the outline on the prediction maps, which show only the cells inside it. It changes no result.</td></tr>
+  </table></div>
+  <p>The covariates may also be fields of the samples, under the same names. A sample without a covariate's field gets the value of the nearest grid cell that has one, and the catalogue says so. The example is the data of the GOS tutorial, from the Leonora district, Western Australia.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Spatial pattern → SDA</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The samples, the grid and the boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/sda/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the covariate grid and the boundary on the map and the SDA panel at step 1">
+    <figcaption>After <b>Load Example</b>: the three layers on the left, the grid on the map, the SDA panel on the right at step 1 of 5.</figcaption>
+  </figure>
+  <p>The panel has five steps, and three of them compute: steps 2, 4 and 5 each have a <span class="ui">Run</span> button, and each run needs the one before it. A tick on a step's number says that it has been run. The pictures show the panel after the runs.</p>
+  <ol class="steps five">
+    <li><img src="img/sda/panel-post1.webp" loading="lazy" alt="SDA panel, step 1 Covariates"><b>Covariates</b>Choose the <span class="ui">Samples</span>, the <span class="ui">Grid</span> and the eight covariates. Click <span class="ui">Next</span>.</li>
+    <li><img src="img/sda/panel-post2.webp" loading="lazy" alt="SDA panel, step 2 Scales"><b>Scales</b>Keep the buffers 1, 3, 5, 7, 9 km and the quantiles 0, 0.1, …, 1. Click <span class="ui">Run</span>: a copy of the samples gets 440 new fields.</li>
+    <li><img src="img/sda/panel-post3.webp" loading="lazy" alt="SDA panel, step 3 Modelling data"><b>Modelling data</b>That copy, the catalogue of step 2 and y = <code>log_Zn</code>. The eight covariates are the <span class="ui">Original covariates (X)</span>; all 440 are ticked under <span class="ui">Generated variables</span>.</li>
+    <li><img src="img/sda/panel-post4.webp" loading="lazy" alt="SDA panel, step 4 Variable selection"><b>Variable selection</b>Block size 50 km, B = 10 resamples. Click <span class="ui">Run</span>; it cannot be skipped, because step 5 runs after it.</li>
+    <li><img src="img/sda/panel-post5.webp" loading="lazy" alt="SDA panel, step 5 Prediction and cross-validation"><b>Prediction and cross-validation</b>5 folds, <span class="ui">Spatial blocks</span> and <span class="ui">Random</span>. Click <span class="ui">Run</span> (a few seconds).</li>
+  </ol>
+  <p>The tutorial uses B = 10 resamples, 100-tree selection forests and 200-tree random forests to stay quick; the defaults are B = 80, 200 and 500 trees. After the selection the <span class="ui">Chart</span> page shows the selected variables, and after the last run the prediction maps. The panel lists the results under <span class="ui">Outputs</span>, and a green line says that they match the reference results computed with R.</p>
+  <figure class="shot">
+    <img src="img/sda/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the last SDA run: the two prediction maps on the Chart page and the results in the panel">
+    <figcaption>After the last <b>Run</b>: the prediction maps. The menu above the figure opens the other figures; steps 2, 4 and 5 are ticked.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add the samples and the grid (<span class="ui">Add Data</span>), open SDA from the Toolbox and choose them in step 1. The grid needs every covariate as a field.</li>
+    <li>Choose the buffers for the distances at which you expect the surroundings to act, in km. Variables multiply (covariates × buffers × quantiles): with few samples, use fewer.</li>
+    <li>Choose a block size that leaves several blocks per fold (here 50 km gives 8 blocks). With fewer blocks than folds, some folds stay empty.</li>
+    <li>Keep the defaults for real analyses: B = 80, 200 selection trees, 500 random-forest trees.</li>
+  </ol>
+  <ul>
+    <li>The response is not offered among the variables, and a variable generated from it is refused: a model given y to predict y says nothing.</li>
+    <li>Any layer is converted to WGS 84 and the buffers are great-circle distances in km. The spatial blocks are in km after an automatic Albers projection.</li>
+    <li>For a table without geometry, two fields appear below the layer and must be chosen: <span class="ui">Longitude (WGS84 degrees)</span> and <span class="ui">Latitude (WGS84 degrees)</span>. The values are used as they are. A step that takes the table made by an earlier step asks for the two fields again.</li>
+    <li>When the grid is a polygon layer, the prediction maps draw its polygons, coloured by value.</li>
+    <li>A grid cell with a missing value is skipped. A sample with no cell inside a buffer gets NA, and that variable is left out of the selection and the cross-validation with a warning; if all are left out, the run stops. A raw covariate with a missing value at the samples stops the run.</li>
+    <li>Every selected variable is generated at every grid cell, so the time grows with the number of cells and the size of the neighbourhood: about a second per variable at 100,000 cells and 9 km.</li>
+    <li>Column names, category values and file names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the selected variables (what was kept, and at which scale?), the prediction maps (what do they change?), then the cross-validation and the folds table (is the change an improvement?), and last the scatter of observed against predicted values.</p>
+
+  <h3>3.1 Selected variables</h3>
+  <figure class="chart">
+    <img src="img/sda/fig-selectedplot.webp" style="width: 531px" loading="lazy" alt="Selected variables: two blue bubbles, NDVI at searching range 5 km and quantile 0.3, Water at 9 km and quantile 0.5">
+    <figcaption><b>Selected variables</b>: one bubble per selected variable, at its searching range b and quantile τ, labelled with its covariate.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The variables the selection kept. The area of a bubble is |r| and its colour the sign of r, where r is the correlation between the variable and y over the samples (table <b>Selected variables and their correlation with y</b>). The eight raw covariates are always kept and are not drawn.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Variable</th><th>Covariate</th><th class="n">b (km)</th><th class="n">τ</th><th class="n">r</th><th class="n">Frequency</th></tr>
+    <tr><td>NDVI_b5t0.3</td><td>NDVI</td><td class="n">5</td><td class="n">0.3</td><td class="n">−0.41</td><td class="n">1.0</td></tr>
+    <tr><td>Water_b9t0.5</td><td>Water</td><td class="n">9</td><td class="n">0.5</td><td class="n">−0.35</td><td class="n">0.4</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> A covariate's variables form one group, and each group that passes keeps one variable. Two of the eight groups passed the threshold π = 0.6 here. The table <b>Selected variables</b> gives every variable's frequency: the share of the resamples in which it was among the 20 most important generated variables. <code>NDVI_b5t0.3</code> was there in all ten. For Water the group passed (one of its variables was there in 8 of 10 resamples) and <code>Water_b9t0.5</code> itself in 4 of 10. Several other NDVI variables also have a frequency of 1.0 (<code>NDVI_b5t0.4</code>, <code>NDVI_b7t0.5</code>, <code>NDVI_b9t0.2</code>), so read the result as "NDVI within about 5 to 9 km, lower to middle quantiles" and not as one exact scale.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Second-dimension variables were generated as quantiles (τ = 0, 0.1, …, 1) of eight covariates within 1, 3, 5, 7 and 9 km of each sample (Song 2022), 440 in total. The stability selection kept two: the 0.3 quantile of NDVI within 5 km (r = −0.41 with log Zn) and the median of Water within 9 km (r = −0.35)."</p></div>
+
+  <h3>3.2 Prediction maps</h3>
+  <figure class="chart">
+    <img src="img/sda/fig-predictionplot.webp" style="width: 793px" loading="lazy" alt="Two maps of predicted log_Zn on one colour scale: a, the SDA prediction; b, the baseline prediction">
+    <figcaption><b>Prediction maps</b>: a, the SDA prediction (X + SDA); b, the baseline (X only), on one colour scale.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> Two random forests fitted on all samples and applied to every grid cell. The selected variables are generated at the cells as they were at the samples; a cell lies at distance 0 from itself, so it is in its own neighbourhoods. A new layer on the map holds <code>pred_base</code>, <code>pred_sda</code> and <code>pred_diff</code>; a cell with a missing value of a model variable is empty.</p>
+  <p><b>How to read it.</b> Both maps have the same broad pattern: high predicted values in the centre and the south-east. Map a is smoother and its high areas are more compact, because its two extra variables are neighbourhood summaries; map b is more speckled. The maps show what the variables change, not that the change is right: that is the R² chart's question.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Figure X compares the prediction of log Zn from the eight covariates alone with the prediction that adds the two second-dimension variables. Both show the same main pattern; the second is spatially smoother."</p></div>
+
+  <h3>3.3 Cross-validated R²</h3>
+  <figure class="chart">
+    <img src="img/sda/fig-cvplot.webp" style="width: 595px" loading="lazy" alt="Bar charts of mean R² over folds with SD bars, baseline against X + SDA, for spatial-block folds and random folds">
+    <figcaption><b>Cross-validated R²</b>: a, spatial-block folds; b, random folds. Bars are the mean over five folds, lines ± SD.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> For each kind of fold, the baseline against X + SDA: mean R² over the folds (R² = 1 − SSE/SST) ± SD, with the change written above the bars as a percentage of the baseline. The selection is repeated in every fold, so the test samples never choose the variables.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Folds</th><th class="n">R² baseline (SD)</th><th class="n">R² X + SDA (SD)</th><th class="n">RMSE baseline</th><th class="n">RMSE X + SDA</th></tr>
+    <tr><td>Spatial blocks</td><td class="n">0.076 (0.208)</td><td class="n">0.141 (0.238)</td><td class="n">0.690</td><td class="n">0.661</td></tr>
+    <tr><td>Random</td><td class="n">0.348 (0.083)</td><td class="n">0.388 (0.076)</td><td class="n">0.642</td><td class="n">0.623</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> The spatial gain is large in per cent (+86.3%) because the baseline is small, and the fold SDs (about 0.2) are larger than the gain (0.065). Read the table <b>Cross-validation by fold</b> before quoting a percentage:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Spatial fold</th><th class="n">Test samples</th><th class="n">R² baseline</th><th class="n">R² X + SDA</th></tr>
+    <tr><td>1</td><td class="n">235</td><td class="n">0.075</td><td class="n">0.054</td></tr>
+    <tr><td>2</td><td class="n">166</td><td class="n">0.185</td><td class="n">0.317</td></tr>
+    <tr><td>3</td><td class="n">297</td><td class="n">0.179</td><td class="n">0.312</td></tr>
+    <tr><td>4</td><td class="n">168</td><td class="n">0.222</td><td class="n">0.260</td></tr>
+    <tr><td>5</td><td class="n">28</td><td class="n">−0.284</td><td class="n">−0.239</td></tr>
+  </table></div>
+  <p>X + SDA is higher in four of the five spatial folds and lower in one. Fold 5 has only 28 test samples and a negative R² for both models (worse than predicting the mean); it pulls both means down and makes the SDs large. Spatial folds are the stricter test, because the test samples lie in blocks the model has not seen; random folds give higher values for both models. With the defaults (B = 80, 200 and 500 trees) the result is close: spatial 0.076 → 0.152, random 0.343 → 0.391.</p>
+  <p class="warn"><span class="label">Not the published result</span>The public SDA code reports R² 0.3325 against 0.2752 for the paper's Cr case, with VIF selection and one 70/30 split. Here the selection is GCF's and the validation K-fold, on another data set, so the numbers do not compare.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"In five-fold cross-validation with 50 km spatial blocks, adding the second-dimension variables raised the mean R² from 0.076 (SD 0.208) to 0.141 (SD 0.238), and in random folds from 0.348 (SD 0.083) to 0.388 (SD 0.076). The model with the variables was better in four of five spatial folds, but the gain is smaller than the variation between folds."</p></div>
+
+  <h3>3.4 Observed vs predicted</h3>
+  <figure class="chart">
+    <img src="img/sda/fig-scatter.webp" style="width: 383px" loading="lazy" alt="Scatter of observed log_Zn against the out-of-fold predictions of X + SDA in spatial blocks, with the 1:1 line; R² = 0.273">
+    <figcaption><b>Observed vs predicted</b>: the out-of-fold predictions of X + SDA in the spatial-block folds, with the 1:1 line.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> One point per sample: its observed y against the prediction made when its fold was left out. The printed R² (0.273) is pooled over all out-of-fold values.</p>
+  <p><b>How to read it.</b> The pooled R² (0.273; baseline 0.199) is not the mean over folds (0.141): the pooled value is computed once over all 894 predictions, the fold mean gives each fold the same weight, and so the small fold 5 counts for a fifth of it. Say which one you report. The predictions cover a narrower range (about 2.4 to 4.6) than the observations (about 0.7 to 5.9): the lowest observed values are over-predicted and the highest under-predicted.</p>
+  <p>Export any figure from the <span class="ui">Chart</span> page as PDF, SVG or PNG; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run (<a href="../guide.html#export">Part 1</a>).</p>
+
+  <h3>3.5 Reading the results together</h3>
+  <p>The outputs make one argument in three steps: the surroundings of the samples hold information (<b>which</b> covariate, at <b>which</b> range and quantile), that information changes the map (<b>where</b>), and the cross-validation says <b>whether</b> the change is an improvement. Read them in this order:</p>
+  <ol>
+    <li><b>Selected variables</b>: which covariates, searching ranges and quantiles were kept, and whether the quantiles are extremes or middles of the neighbourhood.</li>
+    <li><b>Prediction maps</b>: what the selected variables change, and where.</li>
+    <li><b>Cross-validated R²</b>, with the table <b>Cross-validation by fold</b>: the gap between X + SDA and the baseline, and whether it holds in most folds.</li>
+    <li><b>Observed vs predicted</b>: which part of the range of y is predicted well.</li>
+  </ol>
+  <p class="note"><span class="label">What SDA is not</span>It is not a model of spatial autocorrelation and it does not interpolate the response: the values of y at neighbouring samples are never used. It adds variables on the explanatory side only. It can therefore be combined with kriging, as the published case does; that step is outside Heterra.</p>
+
+  <h3>3.6 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>The definition of the variable (the quantile τ within the searching range b); the buffers and quantiles that were searched; the selection rule and its settings; the folds and the block size</td><td>The settings of the run (in the exported report)</td></tr>
+    <tr><td>Results</td><td>Follow the order of the run: which (b, τ) were selected, what they change on the map, X + SDA against the baseline on left-out samples. Every finding has a number</td><td>Figures <b>Selected variables</b>, <b>Prediction maps</b>, <b>Cross-validated R²</b> and <b>Observed vs predicted</b>; tables <b>Selected variables and their correlation with y</b> and <b>Cross-validation by fold</b></td></tr>
+    <tr><td>Discussion</td><td>The scale that the selected searching ranges point to; why these quantiles and not others; the size of the gain beside the variation between folds; the computing cost</td><td>Table <b>Selected variables</b> (the frequencies of the neighbouring variables); table <b>Cross-validation by fold</b></td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>The selection must not see the test samples. Heterra repeats it in every fold, so report the cross-validated R², not the fit of a model on all samples.</li>
+      <li>Check how many grid cells lie inside the smallest buffer. The quantiles τ = 0 and τ = 1 over a few cells are noise.</li>
+      <li>The generated variables are collinear by construction: neighbouring buffers and neighbouring quantiles describe almost the same neighbourhood. Do not skip the selection, and do not read one selected (b, τ) as an exact scale.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings. Which SDA variables are selected, at which searching range and quantile, and what is the sign of their correlation with <code>log_Zn</code>? How many variables does the X + SDA model have in all?</p>
+    <details><summary>Answer</summary>
+      <p><code>NDVI_b5t0.3</code> (5 km, τ = 0.3, r = −0.41) and <code>Water_b9t0.5</code> (9 km, τ = 0.5, r = −0.35), both negative. With the eight raw covariates, which are always kept, the model has ten variables.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Explore</span></h4>
+    <p>Open the table <span class="ui">Cross-validation by fold</span> from the Outputs. In how many of the random folds is X + SDA better than the baseline? Which spatial fold is the odd one, and why?</p>
+    <details><summary>Answer</summary>
+      <p>In four of the five random folds; in fold 4 it is slightly lower (0.335 against 0.337). Spatial fold 5 has 28 test samples, against 166 to 297 in the others, and a negative R² for both models (−0.284 and −0.239). The blocks are dealt to the folds whole, so the folds can be very unequal.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague writes: "SDA improves the spatial prediction of zinc by 86%." Check this against the cross-validation tables. Is the sentence justified?</p>
+    <details><summary>Answer</summary>
+      <p>No. The 86% is the change from 0.076 to 0.141 as a share of a very small baseline: the gain is 0.065 in R², and the fold SDs are 0.21 and 0.24. Report the two values with their SDs and the number of folds in which the model was better (four of five), and say that the gain lies inside the variation between folds.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Run SDA on your own samples and grid with the default settings (B = 80, 200 and 500 trees). Write three sentences for a results section: one on the variables selected (covariate, b, τ, sign of r), one on what they change on the prediction map, and one on the cross-validated R² of the baseline and of X + SDA in spatial folds.</p>
+    <details><summary>Checklist</summary>
+      <p>Did you give the SD over folds beside each mean R², and look at the folds table? Did you choose the block size before looking at the result, and does it leave several blocks per fold? Did you say whether an R² is the fold mean or pooled? Is the response absent from the covariates?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Song, Y. (2022). The second dimension of spatial association. <i>International Journal of Applied Earth Observation and Geoinformation</i> 111: 102834. <a href="https://doi.org/10.1016/j.jag.2022.102834">doi:10.1016/j.jag.2022.102834</a></li>
+    <li>Wang, X., Wu, Y., Shi, T., Zhang, R., Chen, Y. &amp; Song, Y. (2026). Explainable second-dimension spatial association between park sentiment and built-social environments. <a href="https://doi.org/10.1016/j.cities.2026.107068">doi:10.1016/j.cities.2026.107068</a></li>
+    <li>Ren, K., Song, Y. &amp; Yu, Q. (2026). Second-dimension outliers for spatial prediction. <i>International Journal of Geographical Information Science</i> 40(6): 1915–1942. <a href="https://doi.org/10.1080/13658816.2025.2580414">doi:10.1080/13658816.2025.2580414</a></li>
+    <li>Song, Y. (2026). Generalized covariate field (GCF). <i>International Journal of Geographical Information Science</i> 40: 1–29. <a href="https://doi.org/10.1080/13658816.2026.2729719">doi:10.1080/13658816.2026.2729719</a> (the selection and the cross-validation)</li>
+    <li>R package SecDim: <a href="https://cran.r-project.org/src/contrib/Archive/SecDim/">cran.r-project.org/src/contrib/Archive/SecDim</a>. R package gcf (the selection and the cross-validation): <a href="https://CRAN.R-project.org/package=gcf">cran.r-project.org/package=gcf</a>.</li>
+    <li>Heterra's results match SecDim 3.2, gcf 0.1.1, ranger 0.18.0 and randomForest 4.7-1.2.</li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

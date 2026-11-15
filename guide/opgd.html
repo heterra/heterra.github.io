@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPGD · Heterra guide</title>
+<meta name="description" content="How to run the optimal parameters-based geographical detector (OPGD) in Heterra on your own data, read its figures and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="opgd" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb heterogeneity">Part 2 · Spatial heterogeneity · Chapter 1</p>
+  <h1>OPGD</h1>
+  <p class="sub">Optimal parameters-based geographical detector</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>Which factors explain the spatial pattern of my variable, how strongly, and do two factors together explain more?</div>
+    <div><h4>You need</h4>One layer or table with a numeric response y and one or more factors, continuous or categorical. At least 30 complete rows.</div>
+    <div><h4>You get</h4>The best discretization of each continuous factor, the q value of every factor, and the interaction, risk and ecological detectors, as figures and tables.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>The geographical detector asks a simple question: if the study area is cut into zones (strata) by a factor, are the values of y alike inside each zone and different between zones? If they are, the factor explains the spatial pattern of y. The answer is the <b>q statistic</b>:</p>
+  <p class="note">q = 1 − (sum over the strata of N<sub>h</sub> σ<sub>h</sub>²) / (N σ²)<br>N and σ² are the number of units and the variance of y in the whole area, N<sub>h</sub> and σ<sub>h</sub>² those in stratum h. q lies between 0 and 1: the share of the variance of y that the strata explain.</p>
+  <p>A categorical factor (a climate zone, a land-use class) already has strata. A continuous factor (precipitation, GDP) has to be cut into intervals first, and q depends on how it is cut. OPGD removes that arbitrary choice: for every continuous factor it tries several discretization methods and several numbers of intervals, and keeps the combination with the largest q. The four detectors are then run on those optimal strata.</p>
+
+  <figure class="paper-fig">
+    <img src="img/opgd/paper-schematic.webp" width="1400" height="1203" style="width: 620px" loading="lazy" alt="Flow chart of OPGD: optimization of the discretization and of the spatial scale, then the four detectors">
+    <figcaption><b>How the method works.</b> The discretization method and the number of intervals are chosen by the factor detector; the optimal strata then go to the four detectors. The right-hand box, the optimization of the spatial scale, compares runs on units of different sizes. Source: Song et al. (2020), Fig. 2.</figcaption>
+  </figure>
+
+  <h3>The four detectors</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Detector</th><th>Question</th><th>Result</th></tr>
+    <tr><td>Factor</td><td>How much of the spatial variation of y does each factor explain?</td><td>q and its p value, per factor</td></tr>
+    <tr><td>Interaction</td><td>Do two factors together explain more than each alone?</td><td>q of the two factors overlaid, and the type of interaction</td></tr>
+    <tr><td>Risk</td><td>In which strata of a factor is y high or low, and do the strata differ?</td><td>Mean of y per stratum with its 95% interval; a t test for each pair of strata</td></tr>
+    <tr><td>Ecological</td><td>Does one factor explain significantly more than another?</td><td>Y or N for each pair of factors</td></tr>
+  </table></div>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You want to rank candidate drivers of a spatial variable without assuming a linear relation: q only asks whether y differs between strata.</li>
+    <li>Your factors mix numbers and categories.</li>
+    <li>You want to know where y is high or low along each factor (the risk detector), which is often the finding readers remember.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Vegetation change</td><td>Change of NDVI</td><td>Grid cell</td><td>Song et al. (2020)</td></tr>
+    <tr><td>Road infrastructure</td><td>Pavement deflection and damage</td><td>1 km road segment</td><td>Song et al. (2018)</td></tr>
+    <tr><td>Public health</td><td>Incidence of H1N1 flu</td><td>Region</td><td>Example data of the R package GD</td></tr>
+  </table></div>
+  <p>Any table of spatial units with one numeric response and a mix of continuous and categorical factors fits.</p>
+
+  <figure class="paper-fig">
+    <img src="img/opgd/paper-feature.webp" width="1200" height="1217" style="width: 560px" loading="lazy" alt="Bubble matrix of the interaction detector for 23 variables of road pavement deformation">
+    <figcaption><b>A published result.</b> The interaction detector in a study of road pavement deformation with 23 variables. Each bubble is a pair of variables and its size is the q of the pair. Source: Song et al. (2018), Fig. 8.</figcaption>
+  </figure>
+
+  <p class="warn"><span class="label">Keep in mind</span>q measures association between the pattern of a factor and the pattern of y. It does not give the direction of an effect and does not show causation. The direction comes from the risk means.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>One layer (points, polygons or grid cells) or one table. Each row is a spatial unit. The file can be a shapefile, GeoPackage, GeoJSON or CSV (<a href="../guide.html#data">Part 1</a> shows how to add data).</p>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Type</th><th>In the example</th></tr>
+    <tr><td>Response y</td><td>Number</td><td><code>NDVIchange</code></td></tr>
+    <tr><td>Continuous factors</td><td>Numbers, to be discretized</td><td><code>Tempchange</code>, <code>Precip</code>, <code>GDP</code>, <code>Popdensity</code></td></tr>
+    <tr><td>Categorical factors</td><td>Text classes or integer codes</td><td><code>Climzone</code>, <code>Mining</code></td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>opgd_boundary</code>: the outline drawn on the maps in the charts. It changes no result.</td></tr>
+  </table></div>
+  <p>At least one factor of either kind is needed. The example has 713 simulated cells, so its numbers illustrate the tool and do not describe a real study.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Spatial heterogeneity → OPGD</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The cells and the boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/opgd/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the 713 cells on the map and the OPGD panel at step 1">
+    <figcaption>After <b>Load Example</b>: the layers on the left, the map in the middle, the OPGD panel on the right at step 1 of 3.</figcaption>
+  </figure>
+  <p>The panel has three steps. <span class="ui">Next</span> moves on; <span class="ui">Run</span> appears at the last step, because only that step computes.</p>
+  <ol class="steps">
+    <li><img src="img/opgd/panel-pre1.webp" loading="lazy" alt="OPGD panel, step 1 Data"><b>Data</b>Choose the layer and the <span class="ui">Response y</span>: <code>NDVIchange</code>. The boundary is optional.</li>
+    <li><img src="img/opgd/panel-pre2.webp" loading="lazy" alt="OPGD panel, step 2 Factors"><b>Factors</b>Tick the continuous factors (to be discretized) and the categorical factors (used as they are).</li>
+    <li><img src="img/opgd/panel-pre3.webp" loading="lazy" alt="OPGD panel, step 3 Discretization"><b>Discretization</b>Keep equal, natural and quantile breaks and 3 to 7 intervals. Click <span class="ui">Run</span>.</li>
+  </ol>
+  <p>The run takes well under a second. The <span class="ui">Chart</span> page opens with the feature figure, and the panel lists every result under <span class="ui">Outputs</span>: tables first, then figures. A green line says that the results match the reference results computed with R.</p>
+  <figure class="shot">
+    <img src="img/opgd/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the OPGD run: the feature figure on the Chart page and the results in the panel">
+    <figcaption>After <b>Run</b>: the feature figure. The menu above the figure and the Outputs list in the panel open the other figures and the tables.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add your layer (<span class="ui">Add Data</span>), open OPGD from the Toolbox and choose the layer in step 1.</li>
+    <li>Decide for each factor whether it is continuous or categorical. An integer code such as a soil class is categorical, even though it is a number.</li>
+    <li>Start with the default discretization (equal, natural and quantile breaks, 3 to 7 intervals). With more than about 20,000 rows, untick natural breaks, which are slow at that size.</li>
+  </ol>
+  <ul>
+    <li>Rows with a missing value in y or in any chosen factor are left out. At least 30 complete rows are needed.</li>
+    <li>A categorical factor needs at least two categories. Text categories are ordered alphabetically, numeric codes numerically.</li>
+    <li>A method and number of intervals that cannot be computed for a factor is skipped with a warning. The run stops only if nothing works for a factor.</li>
+    <li>Column names and category values are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the discretization first (is it sensible?), then the factor detector (what matters?), then the risk detector (in which direction?), and last the interaction and ecological detectors (how do the factors compare and combine?).</p>
+
+  <h3>3.1 Optimal discretization</h3>
+  <figure class="chart">
+    <img src="img/opgd/fig-qplot.webp" style="width: 689px" loading="lazy" alt="Q by number of intervals for Tempchange, Precip, GDP and Popdensity, one line per discretization method">
+    <figcaption><b>Q by number of intervals</b>, one panel per continuous factor. Each line is a discretization method; the optimal combination is written under each panel.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> q for every method and number of intervals that was tried. The combination with the largest q is kept. The table <b>Optimal discretization</b> lists it for each factor:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Factor</th><th>Method</th><th class="n">Intervals</th><th class="n">q</th></tr>
+    <tr><td>Tempchange</td><td>natural</td><td class="n">7</td><td class="n">0.575</td></tr>
+    <tr><td>Precip</td><td>natural</td><td class="n">4</td><td class="n">0.851</td></tr>
+    <tr><td>GDP</td><td>quantile</td><td class="n">7</td><td class="n">0.007</td></tr>
+    <tr><td>Popdensity</td><td>quantile</td><td class="n">7</td><td class="n">0.007</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> q usually rises with the number of intervals, so look at the shape of the curve as well as its top. For Precip, q jumps from about 0.66 at 3 intervals to 0.85 at 4 and then stays near 0.82: four intervals are enough. When the largest q sits at the upper limit you set (7 here, as for Tempchange), the limit decided the answer; try a wider range to see whether q keeps rising or levels off.</p>
+  <p>The figure <b>Optimal breaks</b> draws the chosen breaks on the histogram of each factor, and the run adds fields named <code>&lt;factor&gt;_strata</code> to a copy of the layer, so that the strata can be mapped.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Continuous factors were discretized with the optimal parameters-based geographical detector (Song et al. 2020): equal, natural and quantile breaks with 3 to 7 intervals were compared, and the combination with the largest q was used for each factor (Table X)."</p></div>
+
+  <h3>3.2 Factor detector</h3>
+  <figure class="chart">
+    <img src="img/opgd/fig-factorplot.webp" style="width: 383px" loading="lazy" alt="Bar chart of q for the factors with p below 0.05: Precip, Climzone, Tempchange, Mining">
+    <figcaption><b>Factor detector</b>: q of the factors with p &lt; 0.05, largest first.</figcaption>
+  </figure>
+  <div class="table-wrap"><table>
+    <tr><th>Factor</th><th class="n">q</th><th class="n">p</th></tr>
+    <tr><td>Precip</td><td class="n">0.851</td><td class="n">&lt; 0.001</td></tr>
+    <tr><td>Climzone</td><td class="n">0.659</td><td class="n">&lt; 0.001</td></tr>
+    <tr><td>Tempchange</td><td class="n">0.575</td><td class="n">&lt; 0.001</td></tr>
+    <tr><td>Mining</td><td class="n">0.057</td><td class="n">&lt; 0.001</td></tr>
+    <tr><td>GDP</td><td class="n">0.007</td><td class="n">0.79</td></tr>
+    <tr><td>Popdensity</td><td class="n">0.007</td><td class="n">0.69</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> q is the factor's explanatory power: Precip explains 85% of the spatial variance of NDVI change, GDP less than 1%. Analyse q first. The p value says whether q differs from zero under the chosen discretization; with many units a small q can still be significant (Mining: q = 0.06, p &lt; 0.001), so report both and judge importance by q.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Precipitation has the largest q (0.85): it explains the largest share of the spatial pattern of NDVI change, followed by climate zone (0.66) and temperature change (0.57). GDP and population density are not significant at the 0.05 level."</p></div>
+
+  <h3>3.3 Risk detector</h3>
+  <figure class="chart">
+    <img src="img/opgd/fig-riskmeanmaps.webp" style="width: 765px" loading="lazy" alt="Maps of the risk means: one map per factor, each unit in the colour of its stratum">
+    <figcaption><b>Maps of the risk means</b>: one map per factor. Each unit has the colour of its stratum's bar in the risk-mean chart.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The <b>Risk means</b> charts give the mean of y in each stratum with its 95% confidence interval; the maps show where those strata lie. For Precip:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Stratum of Precip</th><th class="n">Units</th><th class="n">Mean NDVI change</th><th class="n">95% interval</th></tr>
+    <tr><td>[87.5, 226]</td><td class="n">115</td><td class="n">0.085</td><td class="n">0.073 to 0.096</td></tr>
+    <tr><td>(226, 347]</td><td class="n">244</td><td class="n">0.165</td><td class="n">0.160 to 0.171</td></tr>
+    <tr><td>(347, 471]</td><td class="n">177</td><td class="n">0.318</td><td class="n">0.310 to 0.326</td></tr>
+    <tr><td>(471, 653]</td><td class="n">177</td><td class="n">0.398</td><td class="n">0.391 to 0.404</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> This is where the direction appears: NDVI change rises steadily with precipitation. The <b>Risk detector</b> chart is a matrix of Welch t tests between strata: Y means that the two strata's means differ at the 0.05 level. A row of N between neighbouring strata suggests that those intervals could be merged.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Mean NDVI change increases across the four precipitation strata, from 0.09 where precipitation is below 226 to 0.40 where it is above 471, and all pairs of strata differ significantly (Welch t test, p &lt; 0.05)."</p></div>
+
+  <h3>3.4 Interaction detector</h3>
+  <figure class="chart">
+    <img src="img/opgd/fig-interactionplot.webp" style="width: 468px" loading="lazy" alt="Interaction detector: circles sized by the q of two factors together, coloured by the type of interaction">
+    <figcaption><b>Interaction detector</b>: circle area is the q of the two factors together; the colour is the type of interaction.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The two factors' strata are overlaid and q is computed for the combined strata, q(X1∩X2). It is compared with the two single values:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Type</th><th>Condition</th></tr>
+    <tr><td>Weaken, nonlinear</td><td>q(X1∩X2) &lt; min(q1, q2)</td></tr>
+    <tr><td>Weaken, uni-</td><td>min(q1, q2) &lt; q(X1∩X2) &lt; max(q1, q2)</td></tr>
+    <tr><td>Enhance, bi-</td><td>max(q1, q2) &lt; q(X1∩X2) &lt; q1 + q2</td></tr>
+    <tr><td>Independent</td><td>q(X1∩X2) = q1 + q2</td></tr>
+    <tr><td>Enhance, nonlinear</td><td>q(X1∩X2) &gt; q1 + q2</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> Always read an interaction together with the two factors' own q. The largest value here is Precip ∩ Mining (0.875), but Precip alone already reaches 0.851: Mining adds little. A pair of weak factors can be "Enhance, nonlinear" and still explain almost nothing (GDP ∩ Popdensity: 0.066).</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The strongest interaction is precipitation ∩ mining (q = 0.88, bi-factor enhancement), only slightly above precipitation alone (0.85). Every pair of factors enhances each other; none is independent or weakening."</p></div>
+
+  <h3>3.5 Ecological detector</h3>
+  <p><b>What it shows.</b> For each pair of factors, whether one explains significantly more than the other. The table gives two definitions in use: the GD package's (Y or N: Y when the ratio of the two values reaches the threshold of the F distribution, 1.10 with 713 units) and the gdverse package's (F, p, Yes or No). They often disagree, so say which one you report.</p>
+  <p><b>How to read it.</b> Use it to support a ranking: "Precip explains more than Tempchange" is backed by Y in that cell. GDP against Popdensity is N: their q values (both 0.007) cannot be told apart.</p>
+
+  <h3>3.6 The feature figure</h3>
+  <figure class="chart">
+    <img src="img/opgd/fig-feature.webp" style="width: 808px" loading="lazy" alt="OPGD feature figure with eight panels">
+    <figcaption><b>Feature figure</b>: a, Q curves; b, optimal breaks; c, factor detector; d, risk means; e, risk-mean map; f, risk detector; g, interaction detector; h, ecological detector. Panels a, b, d, e and f are for the factor with the largest q.</figcaption>
+  </figure>
+  <p>The feature figure puts the main results on one page and is made for a paper's results section. Export it from the <span class="ui">Chart</span> page as PDF or SVG (vector) or PNG at 300 dpi; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run with the method, the steps, the figures and the tables (<a href="../guide.html#export">Part 1</a>).</p>
+
+  <h3>3.7 Reading the results together</h3>
+  <p>The detectors tell one story from four sides: <b>which</b> factors matter (factor detector), <b>with which</b> other factors (interaction detector), <b>where</b> y is high or low (risk detector) and <b>how surely</b> one factor outranks another (ecological detector). Read them in this order:</p>
+  <ol>
+    <li><b>Optimal discretization</b>: check that every continuous factor has a clear best combination.</li>
+    <li><b>Factor detector</b>: the ranking and its significance.</li>
+    <li><b>Ecological detector</b>: which gaps in the ranking are real.</li>
+    <li><b>Interaction and risk detectors</b>: the pairs and the strata that carry the story. A factor with a small q of its own can still matter through an interaction.</li>
+  </ol>
+  <p class="note"><span class="label">What OPGD is not</span>It is not a prediction model: it gives no coefficients and no predicted values. It measures how much of the spatial pattern of y the strata of a factor explain. For a map of predicted values, use a method of <a href="gcf.html">Part 4</a>.</p>
+
+  <h3>3.8 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>The q statistic; the discretization methods and the numbers of intervals compared; the four detectors</td><td>The settings of the run (in the exported report); table <b>Optimal discretization</b></td></tr>
+    <tr><td>Results</td><td>Follow the order of the analysis: discretization, ranking of the factors, interactions, risk strata, significance of the differences. One finding per subsection, each with its q</td><td>Figure <b>Feature figure</b> or the single figures; tables <b>Factor detector</b> and <b>Interaction detector</b></td></tr>
+    <tr><td>Discussion</td><td>Which factors lead together and which differ; the mechanism behind the strongest interaction; whether the ranking holds at another unit size</td><td>Table <b>Ecological detector</b>; a second run on coarser or finer units</td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>Do not compare q values obtained with different search settings: more intervals explain more variance by construction. Fix the methods and the range of intervals, and let OPGD choose inside them.</li>
+      <li>Every stratum needs enough units. With a small sample, lower the largest number of intervals.</li>
+      <li>A large q is an association of patterns, not a cause, and has no direction.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings. Which factor has the second-largest q, and is it continuous or categorical? Which two strata of Climzone have the lowest and the highest mean NDVI change?</p>
+    <details><summary>Answer</summary>
+      <p>Climzone (q = 0.659), a categorical factor. In the Risk means table, Bwk has the lowest mean (0.108) and Dwc the highest (0.379).</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Change a setting</span></h4>
+    <p>In step 3, tick only <span class="ui">Equal intervals</span> and run again. What are the optimal number of intervals and q of Precip now? What does the difference from the first run tell you?</p>
+    <details><summary>Answer</summary>
+      <p>With equal intervals only, the largest q of Precip is 0.825 at 7 intervals, against 0.851 with natural breaks at 4 intervals. A better method reaches a higher q with fewer strata: comparing methods is the point of OPGD. Both runs stay in <span class="ui">History</span>, so you can open either.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague writes: "GDP and population density interact strongly (nonlinear enhancement), so their joint effect on NDVI change is important." Check this against the interaction table. Is the sentence justified?</p>
+    <details><summary>Answer</summary>
+      <p>No. The type is "Enhance, nonlinear" because 0.066 is larger than 0.007 + 0.007, but the two factors together still explain under 7% of the variance. The type describes how q combines, not how large it is.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Run OPGD on your own layer with at least three factors. Write three sentences for a results section: one on the ranking of the factors (q and p), one on the direction of the strongest factor (risk means), and one on the strongest interaction compared with its two factors alone. Export the feature figure as PDF.</p>
+    <details><summary>Checklist</summary>
+      <p>Does each sentence give a number? Did you check that the optimal number of intervals is not simply the upper limit you set? Did you say which ecological-detector definition you used, if you report it?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Song, Y., Wang, J., Ge, Y. &amp; Xu, C. (2020). An optimal parameters-based geographical detector model enhances geographic characteristics of explanatory variables for spatial heterogeneity analysis: cases with different types of spatial data. <i>GIScience &amp; Remote Sensing</i> 57(5): 593–610. <a href="https://doi.org/10.1080/15481603.2020.1760434">doi:10.1080/15481603.2020.1760434</a></li>
+    <li>Song, Y., Wright, G., Wu, P. et al. (2018). Segment-based spatial analysis for assessing road infrastructure performance using monitoring observations and remote sensing data. <i>Remote Sensing</i> 10(11): 1696. <a href="https://doi.org/10.3390/rs10111696">doi:10.3390/rs10111696</a></li>
+    <li>Wang, J.-F. et al. (2010). Geographical detectors-based health risk assessment and its application in the neural tube defects study of the Heshun Region, China. <i>International Journal of Geographical Information Science</i> 24(1): 107–127.</li>
+    <li>R package GD: <a href="https://cran.r-project.org/package=GD">cran.r-project.org/package=GD</a>. Heterra's results match GD 10.9.</li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GC · Heterra guide</title>
+<meta name="description" content="How to compute geocomplexity (GC) in Heterra on your own data, read its maps, curve charts and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="gc" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb pattern">Part 3 · Spatial pattern · Chapter 3</p>
+  <h1>GC</h1>
+  <p class="sub">Geocomplexity</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>Where does my variable depart from the smooth pattern of its surroundings, and at which values of the variable does that happen?</div>
+    <div><h4>You need</h4>One point or polygon layer, or a CSV with longitude and latitude, with one or more numeric variables. 30 points or more are recommended.</div>
+    <div><h4>You get</h4>A field GC between 0 and 1 for each variable, maps of these fields, and a chart per variable of the mean GC along the variable's values.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>Spatial data are usually dependent: a location resembles its neighbours. Geocomplexity measures, for one variable, how strongly each location departs from that smooth spatial dependence. Where the surroundings of a location follow the usual pattern, GC is low; where they break it, GC is high. The measure is from Zhang, Song, Luo and Wu (2023), "Geocomplexity explains spatial errors".</p>
+  <p>For each variable on its own, the computation has three parts:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Part</th><th>What is done</th></tr>
+    <tr><td>Standardise</td><td>The variable is standardised, so its unit does not matter.</td></tr>
+    <tr><td>Local decomposition</td><td>The local Moran measure is decomposed on binary weights of the k nearest neighbours of each location (great-circle distances on WGS84).</td></tr>
+    <tr><td>Rescale</td><td>The result is min–max normalised to 0–1.</td></tr>
+  </table></div>
+  <p class="note">GC lies between 0 and 1 for every variable. The location with the least complex surroundings gets 0, the one with the most complex surroundings gets 1. The scale is relative to that variable.</p>
+
+  <figure class="paper-fig">
+    <img src="img/gc/paper-concept.webp" width="1400" height="565" style="width: 760px" loading="lazy" alt="The formula of spatial local complexity as the sum of a local feature and a surrounding feature, two sketches of the neighbours used, and a grid of values with the complexity at four cells">
+    <figcaption><b>How the method works.</b> Geocomplexity adds two parts: a local feature, how a location relates to its neighbours (the local Moran term, LISA), and a surrounding feature, how those neighbours relate to each other. In the grid on the right, cell A<sub>1</sub> lies in a uniform patch and is simple; A<sub>2</sub> lies where three values meet and is complex. The figure uses grid cells that touch as neighbours; Heterra uses the k nearest neighbours. Source: Zhang et al. (2023), Fig. 1.</figcaption>
+  </figure>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You want to map where a variable is locally irregular, for example before modelling it or to explain where a model's errors are large.</li>
+    <li>You want to know which value ranges of a variable lie in complex surroundings.</li>
+    <li>You have several variables and want the same description for each of them.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Economic inequality</td><td>Gini coefficient; the GC of the explanatory variables explains where models of it have large errors</td><td>Region (333 SA3 regions of Australia)</td><td>Zhang et al. (2023)</td></tr>
+    <tr><td>Urbanization</td><td>Composite urbanization index; the GC of each variable is an extra explanatory variable</td><td>County</td><td>Sun et al. (2026)</td></tr>
+  </table></div>
+  <p>Any point or polygon layer with numeric variables fits. GC itself needs no response; the steps of these studies after the GC fields, such as explaining model errors, are outside Heterra.</p>
+
+  <figure class="paper-fig">
+    <img src="img/gc/paper-feature.webp" width="780" height="575" style="width: 440px" loading="lazy" alt="Scatter plot of the geocomplexity of income against the income level, coloured by the Gini coefficient">
+    <figcaption><b>A published result.</b> Geocomplexity of income against the income level of Australian regions; the colour is the Gini coefficient. This is the kind of curve that the variable–GC charts of Heterra draw. Source: Zhang et al. (2023).</figcaption>
+  </figure>
+
+  <p class="warn"><span class="label">Keep in mind</span>Each variable is scaled to 0–1 on its own. Compare locations within one variable, not GC values across variables: in the example, pure noise has the lowest median GC of the five variables.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>One point layer, or a CSV with longitude and latitude, one row per location (<a href="../guide.html#data">Part 1</a> shows how to add data). A polygon layer also works: each polygon is measured at a point on its surface, with the same k nearest neighbours. Coordinates are used as WGS84 longitude and latitude; a layer in another coordinate system is converted by Heterra. Since version 1.6.0 a table without geometry also works (for example a GeoPackage table): two fields, <span class="ui">Longitude (WGS84 degrees)</span> and <span class="ui">Latitude (WGS84 degrees)</span>, then appear in step 1 and must be chosen. Their values are used as they are.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Type</th><th>In the example</th></tr>
+    <tr><td>Variables to measure</td><td>Numbers, one or more</td><td><code>x1</code> smooth gradient, <code>x2</code> autocorrelated field, <code>x3</code> local hotspots, <code>x4</code> field plus noise, <code>x5</code> pure noise</td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>gc_boundary</code>: the outline drawn on the maps in the charts. All points stay, and it changes no result.</td></tr>
+  </table></div>
+  <p>The example has 400 simulated points in an irregular study area. The five variables were simulated with different spatial structures, so the numbers illustrate the tool and do not describe a real study.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Spatial pattern → GC</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The points and the boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/gc/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the 400 points inside the study-area boundary and the GC panel at step 1">
+    <figcaption>After <b>Load Example</b>: the layers on the left, the map in the middle, the GC panel on the right at step 1 of 2.</figcaption>
+  </figure>
+  <p>The panel has two steps. <span class="ui">Next</span> moves on; <span class="ui">Run</span> appears at the last step, because only that step computes.</p>
+  <ol class="steps two">
+    <li><img src="img/gc/panel-pre1.webp" loading="lazy" alt="GC panel, step 1 Data"><b>Data</b>Choose the layer and tick the <span class="ui">Variables to measure</span>: <code>x1</code> to <code>x5</code>. Each is computed on its own. The boundary is optional.</li>
+    <li><img src="img/gc/panel-pre2.webp" loading="lazy" alt="GC panel, step 2 Neighbours"><b>Neighbours</b>Keep <span class="ui">k nearest neighbours</span> at 6: each point is compared with its six nearest neighbours. Click <span class="ui">Run</span>.</li>
+  </ol>
+  <p>The run takes well under a second. The <span class="ui">Chart</span> page opens with the variable–GC curve charts, and the panel lists every result under <span class="ui">Outputs</span>: the GC fields, then the tables, then the figures. A green line says that the results match the reference results computed with R. The fields <code>GC_x1</code> to <code>GC_x5</code> are added to a copy of the layer, which appears in the layer list.</p>
+  <figure class="shot">
+    <img src="img/gc/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the GC run: the five variable–GC curve charts on the Chart page and the results in the panel">
+    <figcaption>After <b>Run</b>: the curve charts of the five variables as subplots. The menus above the figure choose the figure and one variable or all; the Outputs list in the panel opens the maps and the tables.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add your layer (<span class="ui">Add Data</span>), open GC from the Toolbox and tick the variables in step 1.</li>
+    <li>Start with k = 6, the default of the R package geocomplexity for points. A larger k gives smoother neighbourhoods; try 4 to 12 for very dense or sparse points.</li>
+    <li>Without a coordinate system on the layer, set <span class="ui">Map units</span> under <span class="ui">Advanced</span> so that the maps get a scale bar and a north arrow. It changes only the charts.</li>
+  </ol>
+  <ul>
+    <li>Rows with a missing coordinate or a missing value in a selected variable are left out and get no GC; the log says how many.</li>
+    <li>A constant variable has no geocomplexity and is rejected. With fewer than 30 points you get a warning.</li>
+    <li>k must be smaller than the number of points.</li>
+    <li>With a polygon layer the figure of the maps draws the polygons, coloured by GC. Above 100,000 points the figure of the maps is left out; the fields stay in the output layer and can be mapped there.</li>
+    <li>Column names and file names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the maps first (where is the variable complex?), then the curve charts (at which values?), and the tables when you need the numbers.</p>
+
+  <h3>3.1 Maps of the GC fields</h3>
+  <figure class="chart">
+    <img src="img/gc/fig-gcmaps.webp" style="width: 808px" loading="lazy" alt="Five maps of the study area, one per variable, the points coloured by GC from 0 to 1, each map in its own colours with its own colour bar">
+    <figcaption><b>Maps of the GC fields</b>: one map per variable, each in a colour palette of its own with its own colour bar, all from 0 to 1.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The field <code>GC_&lt;variable&gt;</code> at every point: light for low GC, dark for high GC. Since version 1.6.0 each variable has a sequential palette of its own and its own colour bar, to make clear that the maps are not on a common scale. The palettes are chosen from the names of the variables, so the same variables get the same colours in every run. A regular grid is drawn as tiles, a polygon layer as polygons, other data as points. The same fields are in the output layer, so you can also style them on the <span class="ui">Map</span> page.</p>
+  <p><b>How to read it.</b> Look for where the light and the dark points lie within one map. For x1, the smooth gradient, GC is low at the two ends of the gradient, in the north-east and the south-west of the area, and high almost everywhere else. For x3, the hotspots, nearly all points are dark and only a few small groups are light. For x5, pure noise, light and dark points are mixed with no pattern. Every colour bar runs from 0 to 1, but the values are not comparable between maps: each variable has its own 0 and 1. The medians of the five fields show why this matters:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Variable</th><th>Simulated as</th><th class="n">Median GC</th></tr>
+    <tr><td>x1</td><td>Smooth gradient</td><td class="n">0.82</td></tr>
+    <tr><td>x2</td><td>Autocorrelated field</td><td class="n">0.87</td></tr>
+    <tr><td>x3</td><td>Local hotspots</td><td class="n">0.98</td></tr>
+    <tr><td>x4</td><td>Field plus noise</td><td class="n">0.82</td></tr>
+    <tr><td>x5</td><td>Pure noise</td><td class="n">0.56</td></tr>
+  </table></div>
+  <p>Pure noise has the lowest median, although it is the least smooth variable. A median near 1 means that a few locations with very different surroundings set the lower end of the scale, not that the variable is complex everywhere.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Geocomplexity was computed for each variable with the local Moran-based measure of Zhang et al. (2023) on binary weights of the six nearest neighbours, and normalised to 0–1 per variable. The geocomplexity of x1 is low in the north-east and the south-west of the study area and high elsewhere (Figure X a)."</p></div>
+
+  <h3>3.2 Variable–GC curve charts</h3>
+  <figure class="chart">
+    <img src="img/gc/fig-curves.webp" style="width: 808px" loading="lazy" alt="Five charts, one per variable: binned means of GC with error bars against the variable's value, with a fitted curve and band">
+    <figcaption><b>Variable–GC curve charts</b>: one chart per variable. Black dots are binned means with 95% intervals; the red curve is fitted to the means, with its band.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> Which value ranges of a variable sit in complex surroundings. The values of the variable are cut into 20 quantile bins (20 points each here). A black dot is the mean GC of a bin, the black bar its 95% confidence interval. The red curve is a loess fit (degree 2, span 0.75) to those 20 means, and the light orange band its pointwise 95% confidence band. Some of the binned means of x1:</p>
+  <div class="table-wrap"><table>
+    <tr><th class="n">Bin</th><th class="n">Mean x1</th><th class="n">Mean GC</th><th class="n">95% interval</th></tr>
+    <tr><td class="n">1</td><td class="n">16.10</td><td class="n">0.415</td><td class="n">0.342 to 0.489</td></tr>
+    <tr><td class="n">6</td><td class="n">19.57</td><td class="n">0.837</td><td class="n">0.781 to 0.892</td></tr>
+    <tr><td class="n">11</td><td class="n">22.44</td><td class="n">0.950</td><td class="n">0.936 to 0.964</td></tr>
+    <tr><td class="n">16</td><td class="n">24.44</td><td class="n">0.847</td><td class="n">0.816 to 0.877</td></tr>
+    <tr><td class="n">20</td><td class="n">27.88</td><td class="n">0.340</td><td class="n">0.252 to 0.428</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> Follow the curve from left to right. For x1, GC is low at both ends of the value range and high in the middle, which matches the map: the two ends of the gradient are the two light corners. x2 and x4 have the same arch. For x3, GC stays close to 1 for the low values and falls only for the highest ones, the hotspots (0.74 and 0.35 in the last two bins). For x5 the means lie between about 0.49 and 0.67 with wide bars and no clear shape, as expected for noise.</p>
+  <p>Bars and band say how well the means are known, not how widely GC varies between points. They assume independent values, which spatial data are not, so read them as a lower bound on the uncertainty. Each chart's GC axis has its own range: compare heights within a chart, not between charts.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Geocomplexity is highest for intermediate values of x1 (binned mean 0.95 at x1 ≈ 22.4) and lowest at the two ends of its range (0.42 at 16.1 and 0.34 at 27.9; means of 20 quantile bins, Figure X a). The intervals assume independent observations and understate the uncertainty."</p></div>
+
+  <h3>3.3 The tables</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Table</th><th>Holds</th></tr>
+    <tr><td>Binned means</td><td>Per variable and bin: the number of values, the mean of the variable, the mean GC and its 95% interval. This is what the dots and bars draw.</td></tr>
+    <tr><td>Curve on the binned means</td><td>The red curve and its band, on 200 points per variable.</td></tr>
+    <tr><td>Curve on all points</td><td>A loess fit of GC on the variable over every point, on 200 points per variable. The charts do not draw it; it is there for your own figures.</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> Use <b>Binned means</b> to quote numbers, as in the table above. Tied values give fewer than 20 bins. The limits of an interval may leave 0–1, because they are computed from the mean and its standard error.</p>
+  <p>Export a figure from the <span class="ui">Chart</span> page as PDF or SVG (vector) or PNG at 300 dpi; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run with the method, the steps, the figures and the tables (<a href="../guide.html#export">Part 1</a>).</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The relation between each variable and its geocomplexity was summarised by the mean geocomplexity in 20 quantile bins of the variable and a loess curve (degree 2, span 0.75) fitted to these means. Results match the R package geocomplexity 0.3.0."</p></div>
+
+  <h3>3.4 Reading the results together</h3>
+  <p>The outputs describe one variable from two sides: <b>where</b> its surroundings are complex (the maps) and <b>at which values</b> (the curve charts). The tables give the numbers for both. Read them in this order:</p>
+  <ol>
+    <li><b>Maps of the GC fields</b>: where GC is high and low, within one variable.</li>
+    <li><b>Variable–GC curve charts</b>: which value ranges lie in complex surroundings, and whether this agrees with the map.</li>
+    <li><b>The tables</b>: the binned means and their intervals, for the numbers you quote.</li>
+  </ol>
+  <p class="note"><span class="label">What GC is not</span>It is not a local autocorrelation statistic and does not replace one: it also uses how the neighbours of a location relate to each other. It is not a model and explains nothing by itself. GC is known before any model is fitted, so it can show where modelling will be hard; using it to explain model errors, as in Zhang et al. (2023), is a further step outside Heterra.</p>
+
+  <h3>3.5 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>Geocomplexity and its two parts; the weights (binary, k nearest neighbours, the value of k); the measure (based on local Moran); the normalisation to 0–1 per variable</td><td>The settings of the run (in the exported report)</td></tr>
+    <tr><td>Results</td><td>First the maps, then the curves. One finding per variable, each with a number</td><td>Figures <b>Maps of the GC fields</b> and <b>Variable–GC curve charts</b>; table <b>Binned means</b></td></tr>
+    <tr><td>Discussion</td><td>Where and at which values the variable is complex, and what in the study area may cause it; whether the findings hold with another k; what the GC fields say about where a model may have large errors</td><td>The maps and curves; a second run with another k</td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>Report the weights and the measure together. A GC value means nothing without both, and other measures of geocomplexity (spatial variance, Shannon entropy) can rank locations and variables differently.</li>
+      <li>Check how the locations are connected. A group of locations far from all others is compared only with itself.</li>
+      <li>Do not compare GC values across variables: each variable has its own 0 and 1.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings and open the table <b>Binned means</b>. For x2, which bin has the highest mean GC, and at which mean value of x2? What are the mean GC values of the first and the last bin?</p>
+    <details><summary>Answer</summary>
+      <p>Bin 10, at a mean x2 of about 791, with a mean GC of 0.980. The first bin (x2 ≈ 448) has 0.227 and the last (x2 ≈ 1100) has 0.368: the same arch as x1, low at both ends of the value range.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Explore</span></h4>
+    <p>In the same table, look at x3. In how many of the 20 bins is the mean GC above 0.9? Then open the map of x3 in <b>Maps of the GC fields</b>. What do the table and the map tell you together?</p>
+    <details><summary>Answer</summary>
+      <p>In 18 bins (bins 1 to 18, from 0.978 to 0.931 at the eighteenth); only bins 19 and 20 are lower (0.742 and 0.354). On the map nearly all points are dark and a few small groups are light. The low GC values belong to the highest values of x3, the hotspots, and those few locations stretch the 0–1 scale so that everything else lies near 1.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague writes: "The median GC of x3 is 0.98 and that of x5 is 0.56, so the pattern of x3 is far more complex than that of x5." Is the sentence justified?</p>
+    <details><summary>Answer</summary>
+      <p>No. Each variable is min–max normalised to 0–1 on its own, so GC values cannot be compared across variables. x5 is pure noise and still has the lowest median. What can be said is within a variable: where on the map, and at which values, its GC is high or low.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Compute GC for one or two variables of your own layer with k = 6. Write two sentences for a results section: one on where GC is high and low on the map, and one on the value ranges with high and low GC, with numbers from <b>Binned means</b>. Then run again with another k between 4 and 12 and check whether your two sentences still hold. Export the maps as PDF.</p>
+    <details><summary>Checklist</summary>
+      <p>Did you compare locations within one variable only? Did you state k? Did you say that the intervals assume independent values? Do your conclusions stay the same with the other k? Both runs stay in <span class="ui">History</span>, so you can open either.</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Zhang, Z., Song, Y., Luo, P. &amp; Wu, P. (2023). Geocomplexity explains spatial errors. <i>International Journal of Geographical Information Science</i> 37(7): 1449–1469. <a href="https://doi.org/10.1080/13658816.2023.2203212">doi:10.1080/13658816.2023.2203212</a></li>
+    <li>Sun, Y., Wu, G., Song, Y. et al. (2026). Local effects of pattern interactions in driving urbanization. <i>Int J Appl Earth Obs Geoinf</i> 146: 105072. <a href="https://doi.org/10.1016/j.jag.2025.105072">doi:10.1016/j.jag.2025.105072</a></li>
+    <li>R package geocomplexity: <a href="https://cran.r-project.org/package=geocomplexity">cran.r-project.org/package=geocomplexity</a>. Heterra's results match geocomplexity 0.3.0.</li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

@@ -33,6 +33,22 @@
 .reach-tip { position: absolute; top: 0; left: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); box-shadow: var(--shadow); font-size: 14px; line-height: 1.35; white-space: nowrap; pointer-events: none; }
 .reach-tip b { font-weight: 600; color: var(--heading); font-variant-numeric: tabular-nums; }
 .reach-tip small { font-size: 13px; color: var(--muted); }
+.reach-map-box { grid-column: 1 / -1; }
+.reach-map { position: relative; margin-top: 10px; touch-action: pan-y; }
+.reach-map svg { display: block; width: 100%; height: auto; }
+.reach-land { fill: var(--line); stroke: var(--bg-soft); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.reach-land[data-step="1"] { fill: color-mix(in srgb, var(--accent) 28%, var(--bg-soft)); }
+.reach-land[data-step="2"] { fill: color-mix(in srgb, var(--accent) 52%, var(--bg-soft)); }
+.reach-land[data-step="3"] { fill: color-mix(in srgb, var(--accent) 76%, var(--bg-soft)); }
+.reach-land[data-step="4"] { fill: var(--accent); }
+.reach-land.is-on { stroke: var(--heading); stroke-width: 1.5; }
+.reach-key { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.reach-key i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; background: var(--line); }
+.reach-key i[data-step="1"] { background: color-mix(in srgb, var(--accent) 28%, var(--bg-soft)); }
+.reach-key i[data-step="2"] { background: color-mix(in srgb, var(--accent) 52%, var(--bg-soft)); }
+.reach-key i[data-step="3"] { background: color-mix(in srgb, var(--accent) 76%, var(--bg-soft)); }
+.reach-key i[data-step="4"] { background: var(--accent); }
+.reach-key .reach-credit { margin-left: auto; }
 .reach-table { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (max-width: 820px) {
   .reach { padding: 40px 0; }
@@ -50,6 +66,7 @@
       <a href="#"><span lang="en">Home</span><span lang="zh">首页</span></a>
       <a href="#results"><span lang="en">Results</span><span lang="zh">结果</span></a>
       <a href="#methods"><span lang="en">Methods</span><span lang="zh">方法</span></a>
+      <a href="guide.html"><span lang="en">Guide</span><span lang="zh">指南</span></a>
       <a href="#download"><span lang="en">Download</span><span lang="zh">下载</span></a>
       <a href="#feedback"><span lang="en">Feedback</span><span lang="zh">反馈</span></a>
     </nav>
@@ -77,6 +94,7 @@
     <div class="hero-buttons">
       <a class="button" href="#download"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
       <a class="button" href="#download"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 1h10.5v10.5H1zM12.5 1H23v10.5H12.5zM1 12.5h10.5V23H1zM12.5 12.5H23V23H12.5z"/></svg><span lang="en">Download for Windows</span><span lang="zh">下载 Windows 版</span></a>
+      <a class="button guide-button" href="guide.html"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h7a3 3 0 0 1 1 .2A3 3 0 0 1 13 3h7v16h-7a1 1 0 0 0-1 1 1 1 0 0 0-1-1H4zm2 2v12h5V5.2A1 1 0 0 0 11 5zm7 .2V17h5V5h-5a1 1 0 0 0 0 .2z"/></svg><span lang="en">Step-by-step guide</span><span lang="zh">分步使用指南(英文)</span></a>
     </div>
     <p class="small" lang="en">Mac (Apple silicon, macOS 13 or later) · Windows 10 or 11 (64-bit)</p>
     <p class="small" lang="zh">Mac(Apple 芯片,macOS 13 或更高)· Windows 10 或 11(64 位)</p>
@@ -327,9 +345,9 @@
     <!-- At a release, put the installers in downloads/ and change each link, its data-download and the lines below.
          A click on data-download is counted when gaId is set (its value: version and platform). -->
     <div class="platform">
-      <a class="button" href="downloads/Heterra-1.5.0-arm64.dmg" download data-download="1.5.0-mac"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
-      <p class="small" lang="en">Version 1.5.0 · 25 MB · Heterra-1.5.0-arm64.dmg</p>
-      <p class="small" lang="zh">版本 1.5.0 · 25 MB · Heterra-1.5.0-arm64.dmg</p>
+      <a class="button" href="downloads/Heterra-1.6.0-arm64.dmg" download data-download="1.6.0-mac"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg><span lang="en">Download for Mac</span><span lang="zh">下载 Mac 版</span></a>
+      <p class="small" lang="en">Version 1.6.0 · 25 MB · Heterra-1.6.0-arm64.dmg</p>
+      <p class="small" lang="zh">版本 1.6.0 · 25 MB · Heterra-1.6.0-arm64.dmg</p>
       <ul class="notes">
         <li lang="en"><b>Requirements.</b> A Mac with Apple silicon and macOS 13 or later.</li>
         <li lang="zh"><b>系统要求。</b>Apple 芯片的 Mac,macOS 13 或更高。</li>
@@ -340,9 +358,9 @@
       </ul>
     </div>
     <div class="platform">
-      <a class="button" href="downloads/Heterra-1.5.0-x64-setup.exe" download data-download="1.5.0-windows"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 1h10.5v10.5H1zM12.5 1H23v10.5H12.5zM1 12.5h10.5V23H1zM12.5 12.5H23V23H12.5z"/></svg><span lang="en">Download for Windows</span><span lang="zh">下载 Windows 版</span></a>
-      <p class="small" lang="en">Version 1.5.0 · 41 MB · Heterra-1.5.0-x64-setup.exe</p>
-      <p class="small" lang="zh">版本 1.5.0 · 41 MB · Heterra-1.5.0-x64-setup.exe</p>
+      <a class="button" href="downloads/Heterra-1.6.0-x64-setup.exe" download data-download="1.6.0-windows"><svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 1h10.5v10.5H1zM12.5 1H23v10.5H12.5zM1 12.5h10.5V23H1zM12.5 12.5H23V23H12.5z"/></svg><span lang="en">Download for Windows</span><span lang="zh">下载 Windows 版</span></a>
+      <p class="small" lang="en">Version 1.6.0 · 41 MB · Heterra-1.6.0-x64-setup.exe</p>
+      <p class="small" lang="zh">版本 1.6.0 · 41 MB · Heterra-1.6.0-x64-setup.exe</p>
       <ul class="notes">
         <li lang="en"><b>Requirements.</b> Windows 10 (version 1809 or later) or Windows 11, 64-bit, with a processor from 2013 (Intel) or 2015 (AMD) or later. The installer checks the processor.</li>
         <li lang="zh"><b>系统要求。</b>Windows 10(1809 或更新版本)或 Windows 11,64 位;处理器为 Intel 2013 年或 AMD 2015 年以后的型号。安装程序会检查处理器。</li>
@@ -408,6 +426,12 @@ Main use (optional):</pre>
     <!-- Newest first. Add one <li> for each release. -->
     <ul class="releases">
       <li>
+        <span class="date"><time datetime="2026-11-15">2026-11-15</time></span>
+        <b>1.6.0</b>
+        <span lang="en">Local maps in DSI and SIE. Added the Guide at <a href="https://heterra.org/guide">heterra.org/guide</a>.</span>
+        <span lang="zh">DSI 和 SIE 新增局部地图。新增使用指南:<a href="https://heterra.org/guide">heterra.org/guide</a>。</span>
+      </li>
+      <li>
         <span class="date"><time datetime="2026-11-12">2026-11-12</time></span>
         <b>1.5.0</b>
         <span lang="en">Eight languages: English, Simplified Chinese (简体中文), Traditional Chinese (繁體中文), French (Français), Spanish (Español), Brazilian Portuguese (Português), Japanese (日本語) and Korean (한국어). New maps and tables in the results of SDO, DSI, GCF and LISP.</span>
@@ -442,6 +466,18 @@ Main use (optional):</pre>
     <div>
       <p class="reach-chart-title"><span lang="en">Cumulative users by day</span><span lang="zh">每日累计用户数</span></p>
       <div class="reach-chart" id="reach-chart"></div>
+    </div>
+    <!-- the map: shown only when stats.json has byCountry -->
+    <div class="reach-map-box" id="reach-map-box" hidden>
+      <p class="reach-chart-title"><span lang="en">Users by country and region</span><span lang="zh">各国家和地区的用户数</span></p>
+      <div class="reach-map" id="reach-map"></div>
+      <ul class="reach-key">
+        <li><i data-step="1"></i>1–9</li>
+        <li><i data-step="2"></i>10–99</li>
+        <li><i data-step="3"></i>100–999</li>
+        <li><i data-step="4"></i>1,000+</li>
+        <li class="reach-credit"><span lang="en">Outlines: Natural Earth</span><span lang="zh">轮廓:Natural Earth</span></li>
+      </ul>
     </div>
   </div>
 </section>
@@ -558,7 +594,7 @@ Main use (optional):</pre>
 })();
 </script>
 <script>
-// Users section: reads stats.json { updated, countries, daily: [{ date: "YYYY-MM-DD", count }] }.
+// Users section: reads stats.json { updated, countries, daily: [{ date: "YYYY-MM-DD", count }], byCountry: { "AU": count } }.
 // The total is the sum of the daily counts, so the number and the chart cannot disagree.
 (function () {
   var box = document.getElementById("reach");
@@ -677,12 +713,88 @@ Main use (optional):</pre>
     chart.appendChild(table);
   }
 
+  // The map: one outline per country or region from assets/world-map.js, coloured by its users in four steps of ten.
+  var mapBox = document.getElementById("reach-map-box"), map = document.getElementById("reach-map");
+  var byCountry = null;
+  function step(v) { return !v ? 0 : v < 10 ? 1 : v < 100 ? 2 : v < 1000 ? 3 : 4; }
+  // a place's name in the page's language, from the browser; the code itself where the browser has none
+  function placeName(code) {
+    var ui = document.documentElement.getAttribute("data-ui") || "en";
+    try { return new Intl.DisplayNames([ui === "zh" ? "zh-Hans" : ui, "en"], { type: "region" }).of(code) || code; } catch (e) { return code; }
+  }
+  function drawMap() {
+    var world = window.heterraWorld;
+    if (!world || !byCountry) return;
+    map.textContent = "";
+    var svg = el("svg", { viewBox: "0 0 " + world.width + " " + world.height, role: "img", "aria-label": "Users by country and region" }, map);
+    var shapes = {};
+    // places with users last, so their outlines lie on top of their neighbours'
+    Object.keys(world.shapes).sort(function (a, b) { return (byCountry[a] || 0) - (byCountry[b] || 0); }).forEach(function (code) {
+      var g = el("g", { class: "reach-land", "data-code": code, "data-step": step(byCountry[code]) }, svg);
+      if (world.shapes[code]) el("path", { d: world.shapes[code] }, g);
+      // a place too small to see has a dot once it has users
+      if (world.dots[code] && byCountry[code]) el("circle", { cx: world.dots[code][0], cy: world.dots[code][1], r: 7 }, g);
+      shapes[code] = g;
+    });
+    var tip = document.createElement("div");
+    tip.className = "reach-tip";
+    tip.hidden = true;
+    map.appendChild(tip);
+    var on = null;
+    function leave() {
+      if (on) on.classList.remove("is-on");
+      on = null;
+      tip.hidden = true;
+    }
+    function point(e) {
+      var g = e.target.closest ? e.target.closest(".reach-land") : null;
+      if (!g) return leave();
+      if (g !== on) {
+        if (on) on.classList.remove("is-on");
+        on = g;
+        g.classList.add("is-on");
+        var code = g.getAttribute("data-code");
+        tip.textContent = "";
+        var small = document.createElement("small"), b = document.createElement("b");
+        small.textContent = placeName(code);
+        b.textContent = n(byCountry[code] || 0);
+        tip.appendChild(small); tip.appendChild(document.createElement("br")); tip.appendChild(b);
+        tip.hidden = false;
+      }
+      var box = map.getBoundingClientRect();
+      var left = e.clientX - box.left + 14, top = e.clientY - box.top - tip.offsetHeight - 10;
+      if (left + tip.offsetWidth > box.width) left = e.clientX - box.left - 14 - tip.offsetWidth;
+      tip.style.transform = "translate(" + Math.max(0, left) + "px," + Math.max(0, top) + "px)";
+    }
+    map.onpointermove = point;
+    map.onpointerdown = point;
+    map.onpointerleave = leave;
+
+    // the same numbers for screen readers, the largest first
+    var table = document.createElement("table");
+    table.className = "reach-table";
+    Object.keys(byCountry).sort(function (a, b) { return byCountry[b] - byCountry[a]; }).forEach(function (code) {
+      var row = table.insertRow();
+      row.insertCell().textContent = placeName(code);
+      row.insertCell().textContent = n(byCountry[code]);
+    });
+    map.appendChild(table);
+    mapBox.hidden = false;
+  }
+  // the outlines are 100 KB: fetched only when there are numbers to draw on them
+  function loadMap() {
+    var s = document.createElement("script");
+    s.src = "assets/world-map.js";
+    s.onload = drawMap;
+    document.head.appendChild(s);
+  }
+
   function places() {
     document.querySelectorAll(".reach-countries").forEach(function (b) { b.textContent = n(countries); });
   }
   // a change of language writes the texts again: put the number back, and the dates of the chart
   document.addEventListener("heterra-language", function () {
-    if (days.length) { places(); draw(); }
+    if (days.length) { places(); draw(); drawMap(); }
   });
 
   fetch("stats.json", { cache: "no-cache" }).then(function (r) {
@@ -703,6 +815,7 @@ Main use (optional):</pre>
     updated.setAttribute("datetime", data.updated);
     box.hidden = false;
     draw();
+    if (data.byCountry && Object.keys(data.byCountry).length) { byCountry = data.byCountry; loadMap(); }
     if (window.ResizeObserver) new ResizeObserver(function () {
       if (chart.clientWidth !== +chart.getAttribute("data-w")) { chart.setAttribute("data-w", chart.clientWidth); draw(); }
     }).observe(chart);

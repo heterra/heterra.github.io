@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIE · Heterra guide</title>
+<meta name="description" content="How to measure the spatial information explained (SIE) by prediction models in Heterra from their out-of-fold predictions, read its figure and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="sie" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb evaluation">Part 5 · Model evaluation · Chapter 9</p>
+  <h1>SIE</h1>
+  <p class="sub">Spatial information explained</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>How much of the spatial information in my variable does each prediction model explain, beyond what R² tells me?</div>
+    <div><h4>You need</h4>One point table with the observed y, one field of out-of-fold predictions per model, two coordinate fields and, if you have it, the fold of each point.</div>
+    <div><h4>You get</h4>E for every model with its fold standard error, E at each grid scale, and R² with its fold standard error, in one figure and three tables.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>A variable has spatial information when knowing where a point lies tells you something about its value. Mutual information measures this: I(y; S) is the information shared between the value y and the location S. If a model has explained the spatial structure of y, its residuals should no longer depend on location, so the mutual information between the residuals e and S should be small. SIE is the share of the spatial information of y that is no longer in the residuals:</p>
+  <p class="note">E<sub>r</sub> = 1 − I(e; S) / I(y; S)<br>y and the residuals e = y − prediction are each cut into n<sub>b</sub> equal-frequency bins. The location S is the cell of a grid of g × g cells laid over the bounding box of the points. E<sub>r</sub> is limited to the range 0 to 1.<br>E = sum over the grid scales of w<sub>g</sub> E<sub>r</sub>, with softmax weights w<sub>g</sub> of I(y; S)</p>
+  <p>E<sub>r</sub> is computed at several grid scales (4, 6, 8 and 10 cells a side by default) and the scales are combined into one value E, with more weight on the scales at which y carries more spatial information. A higher E means that the model explains more of the spatial structure of y.</p>
+
+  <figure class="paper-fig">
+    <img src="img/sie/paper-sie-vs-r2.webp" width="1600" height="916" style="width: 808px" loading="lazy" alt="Two panels of R squared against SIE for ten models predicting C4 grass cover across Australia: spatial block cross-validation on the left, random cross-validation on the right">
+    <figcaption><b>SIE beside R², in the paper's case study.</b> Ten models that predict C4 grass cover across Australia, drawn again with the paper's code and data. Each point is a model, with E on the horizontal axis and R² on the vertical axis; the bars are one fold standard error. The left panel uses spatial block cross-validation, as the example of this chapter does. The right panel uses random cross-validation, which gives every model a higher E. Source: Song (2026), case study.</figcaption>
+  </figure>
+
+  <h3>One E, and its error bars</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Value</th><th>Computed from</th><th>Column</th></tr>
+    <tr><td>E</td><td>All points at once (the pooled estimate). There is one E per model.</td><td><code>E</code></td></tr>
+    <tr><td>Standard error of E</td><td>E computed in each fold separately; the standard deviation of those values divided by √k, for k folds</td><td><code>E_se</code></td></tr>
+    <tr><td>R²</td><td>The mean of the fold R², each 1 − SSE/SST, with its fold standard error</td><td><code>R2</code>, <code>R2_se</code></td></tr>
+    <tr><td>R² on all points</td><td>1 − SSE/SST over all points</td><td><code>R2_pooled</code></td></tr>
+  </table></div>
+  <p>The fold values are used only for the error bars. E itself is not their mean.</p>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You have several prediction models, fitted elsewhere under cross-validation, and want to compare how much spatial structure each one captures.</li>
+    <li>Your models have similar R² and you want a second criterion that looks at where the errors are, not only at how large they are.</li>
+    <li>You want to see at which spatial scale a model loses the pattern.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Vegetation</td><td>Share of area under C4 natural grass</td><td>0.5° grid cell</td><td>Song (2026)</td></tr>
+  </table></div>
+  <p>Any spatial prediction with a continuous response fits, for example soil properties, air quality, vegetation cover, land surface temperature or urban indicators, and any model, because SIE reads only the predictions.</p>
+
+  <p class="warn"><span class="label">Keep in mind</span>SIE needs out-of-fold predictions: each point predicted by a model that did not see it. In-sample predictions overstate E. A difference in E between two models that is smaller than their fold standard errors is not evidence that one is better.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>Heterra does not fit the models. You build them in your own software and bring one table of predictions. To make that table:</p>
+  <ol>
+    <li>Assign every point to one of k folds. Spatial block cross-validation, in which each fold is made of whole spatial blocks, is the usual choice for spatial data.</li>
+    <li>For each fold in turn, fit the model on the other folds and predict the points of the fold that was left out.</li>
+    <li>Put the predictions together, so that every point has one prediction, made by a model that did not see it. Do this for every model, with the same folds.</li>
+    <li>Write one row per point: the two coordinates, the observed y, the fold, and one field of predictions per model.</li>
+  </ol>
+  <p>Save the table as CSV, shapefile, GeoPackage or GeoJSON (<a href="../guide.html#data">Part 1</a> shows how to add data). Since version 1.6.0 the layer may also be polygons or a regular grid; the location of each row is still the pair of coordinate fields you choose (for a layer with geometry, <span class="ui">Geometry X</span> and <span class="ui">Geometry Y</span> are offered too).</p>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Type</th><th>In the example</th></tr>
+    <tr><td>Observed y</td><td>Number</td><td><code>C4_grass</code>, C4 grass cover (%)</td></tr>
+    <tr><td>Predictions, one field per model</td><td>Numbers, out-of-fold</td><td><code>random_forest</code>, <code>xgboost</code>, <code>lightgbm</code>, <code>svr</code>, <code>neural_net</code>, <code>elastic_net</code>, <code>lasso</code>, <code>gbm</code>, <code>knn</code>, <code>mars</code></td></tr>
+    <tr><td>X and Y coordinates</td><td>Numbers, degrees or metres</td><td><code>lon</code>, <code>lat</code></td></tr>
+    <tr><td>Fold (optional)</td><td>Number or category</td><td><code>fold</code>, 1 to 5</td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>sie_boundary</code>: the states and territories drawn on the map and on the maps of the local SIE. It changes no result.</td></tr>
+  </table></div>
+  <p>The field names are the model names. The example is not simulated: it is the case of the paper, 2480 grid cells across Australia with the out-of-fold predictions of ten models under five-fold spatial block cross-validation. The boundary comes from the Australian Bureau of Statistics (Australian Statistical Geography Standard), simplified by the author; 2 cell centres lie just beyond its simplified coast.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Model evaluation → SIE</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The grid cells and the boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/sie/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the 2480 grid cells across Australia and the SIE panel at step 1">
+    <figcaption>After <b>Load Example</b>: the layers on the left, the grid cells on the map, the SIE panel on the right at step 1 of 3.</figcaption>
+  </figure>
+  <p>The panel has three steps. <span class="ui">Next</span> moves on; <span class="ui">Run</span> appears at the last step, because only that step computes.</p>
+  <ol class="steps">
+    <li><img src="img/sie/panel-pre1.webp" loading="lazy" alt="SIE panel, step 1 Data"><b>Data</b>Choose the layer and the <span class="ui">Observed y</span>: <code>C4_grass</code>. Under <span class="ui">Predictions</span> tick the ten model fields.</li>
+    <li><img src="img/sie/panel-pre2.webp" loading="lazy" alt="SIE panel, step 2 Location and folds"><b>Location and folds</b>Coordinates <code>lon</code> and <code>lat</code>; <span class="ui">Fold</span> <code>fold</code>, which gives the error bars. The <span class="ui">Study-area boundary (for the maps)</span> is optional.</li>
+    <li><img src="img/sie/panel-pre3.webp" loading="lazy" alt="SIE panel, step 3 Parameters"><b>Parameters</b>Keep 20 bins and grid scales 4, 6, 8, 10, as in the paper. Click <span class="ui">Run</span>.</li>
+  </ol>
+  <p>The run takes about one second. The <span class="ui">Chart</span> page opens with the figure, and the panel lists every result under <span class="ui">Outputs</span>: the three tables, the figure, and since version 1.6.0 the local SIE fields and their figure of maps. A green line says that the results match the reference results computed with R.</p>
+  <figure class="shot">
+    <img src="img/sie/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the SIE run: the figure with three panels on the Chart page and the results in the panel">
+    <figcaption>After <b>Run</b>: the figure <b>SIE of the prediction models</b>. The Outputs list in the panel opens the tables and the maps of the local SIE.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add your table (<span class="ui">Add Data</span>), open SIE from the Toolbox, choose the layer and y, and tick one prediction field per model.</li>
+    <li>In step 2 choose the two coordinate fields and, if you have one, the fold field.</li>
+    <li>Start with the default parameters (20 bins, grid scales 4, 6, 8, 10).</li>
+  </ol>
+  <ul>
+    <li>Predictions must be out-of-fold; in-sample predictions overstate E.</li>
+    <li>Coordinates are used as they are, in degrees or metres. The grid covers their bounding box.</li>
+    <li>y and the coordinates must not have missing values. Where a model's prediction is missing, that row is left out for that model only, and a warning says how many.</li>
+    <li>Each fold needs enough distinct values for n<sub>b</sub> bins. With small folds, reduce <span class="ui">Number of bins n_b</span>.</li>
+    <li>Without a fold field you get E and R² on all points, but no error bars.</li>
+    <li>The maps of the local SIE take the coordinate fields to be in the coordinate system of the layer. If they are not, or the layer has none, set <span class="ui">Map units</span> under <span class="ui">Advanced</span> in step 2, so that the maps get a scale bar and a north arrow. It changes only the charts.</li>
+    <li>Column names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>The run draws one figure with three panels and one legend of the prediction models. Read panel a first (how do the models rank on E?), then panel b (at which scales?), and then panel c (does E agree with R²?). The tables hold the same numbers. A second figure, new in version 1.6.0, maps a local SIE (section 3.4).</p>
+  <figure class="chart">
+    <img src="img/sie/fig-sier2.webp" style="width: 808px" loading="lazy" alt="SIE of the prediction models: a, bars of E by model; b, E at grid scales 4 to 10, one line per model; c, mean fold R squared against E with error bars">
+    <figcaption><b>SIE of the prediction models</b>: a, SIE by model; b, Multi-scale SIE; c, SIE and R². Error bars are ± one fold standard error (SD/√k), in c of E (horizontal) and of R² (vertical).</figcaption>
+  </figure>
+
+  <h3>3.1 Panel a: SIE by model</h3>
+  <p><b>What it shows.</b> E of each model, largest at the top, with its fold standard error. The table <b>SIE and R² by model</b> lists the values:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Model</th><th class="n">E</th><th class="n">SE of E</th><th class="n">R² (mean of folds)</th><th class="n">SE of R²</th><th class="n">R² on all points</th></tr>
+    <tr><td>knn</td><td class="n">0.501</td><td class="n">0.022</td><td class="n">0.727</td><td class="n">0.007</td><td class="n">0.755</td></tr>
+    <tr><td>neural_net</td><td class="n">0.501</td><td class="n">0.012</td><td class="n">0.751</td><td class="n">0.006</td><td class="n">0.775</td></tr>
+    <tr><td>xgboost</td><td class="n">0.500</td><td class="n">0.011</td><td class="n">0.729</td><td class="n">0.015</td><td class="n">0.755</td></tr>
+    <tr><td>svr</td><td class="n">0.485</td><td class="n">0.033</td><td class="n">0.789</td><td class="n">0.024</td><td class="n">0.794</td></tr>
+    <tr><td>lightgbm</td><td class="n">0.477</td><td class="n">0.018</td><td class="n">0.714</td><td class="n">0.018</td><td class="n">0.737</td></tr>
+    <tr><td>gbm</td><td class="n">0.469</td><td class="n">0.019</td><td class="n">0.751</td><td class="n">0.012</td><td class="n">0.774</td></tr>
+    <tr><td>random_forest</td><td class="n">0.459</td><td class="n">0.014</td><td class="n">0.762</td><td class="n">0.013</td><td class="n">0.777</td></tr>
+    <tr><td>mars</td><td class="n">0.368</td><td class="n">0.026</td><td class="n">0.726</td><td class="n">0.010</td><td class="n">0.760</td></tr>
+    <tr><td>elastic_net</td><td class="n">0.335</td><td class="n">0.029</td><td class="n">0.696</td><td class="n">0.022</td><td class="n">0.727</td></tr>
+    <tr><td>lasso</td><td class="n">0.333</td><td class="n">0.029</td><td class="n">0.696</td><td class="n">0.022</td><td class="n">0.726</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> The bar is the pooled E, computed from all points. The error bar is the fold standard error; it says how much E varies between folds, and it is the yardstick for comparing models. The top three models (0.501, 0.501, 0.500) cannot be told apart: their differences are far smaller than their standard errors. The gap between the upper group and mars, elastic_net and lasso (0.33 to 0.37) is several standard errors wide. The table <b>E and R² by fold</b> gives the fold values behind the error bars; for knn they run from 0.247 to 0.362, all below the pooled 0.501, which is why E is not reported as a mean of folds.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Spatial information explained (SIE; Song 2026) was computed from out-of-fold predictions under five-fold spatial block cross-validation, with 20 bins and grid scales 4, 6, 8 and 10. E is the estimate from all observations and is reported with its fold standard error. KNN, the neural network and XGBoost explain the most spatial information (E = 0.50, SE 0.01 to 0.02) and cannot be separated; the lasso and the elastic net explain the least (E = 0.33, SE 0.03)."</p></div>
+
+  <h3>3.2 Panel b: Multi-scale SIE</h3>
+  <p><b>What it shows.</b> E<sub>r</sub> at each grid scale, one line per model. The table <b>Scale profile</b> adds, for each scale, the number of occupied cells, the two mutual informations (<code>I_Y_S</code>, <code>I_e_S</code>), a bias term of the mutual information estimate (reported only, not subtracted) and the weight of the scale in E.</p>
+  <div class="table-wrap"><table>
+    <tr><th class="n">Grid scale g</th><th class="n">Occupied cells</th><th class="n">I(y; S)</th><th class="n">Weight</th><th class="n">E<sub>r</sub> of knn</th><th class="n">E<sub>r</sub> of lasso</th></tr>
+    <tr><td class="n">4</td><td class="n">15</td><td class="n">0.670</td><td class="n">0.199</td><td class="n">0.615</td><td class="n">0.436</td></tr>
+    <tr><td class="n">6</td><td class="n">29</td><td class="n">0.829</td><td class="n">0.234</td><td class="n">0.568</td><td class="n">0.421</td></tr>
+    <tr><td class="n">8</td><td class="n">49</td><td class="n">0.971</td><td class="n">0.269</td><td class="n">0.495</td><td class="n">0.311</td></tr>
+    <tr><td class="n">10</td><td class="n">72</td><td class="n">1.071</td><td class="n">0.298</td><td class="n">0.379</td><td class="n">0.215</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> The first four columns describe y and the grid, so they are the same for every model. In the example every line falls from left to right: the models explain more of the broad pattern (4 × 4 cells) than of the finer pattern (10 × 10 cells). Lines that cross show models that are better at different scales, which the single value E hides. An E<sub>r</sub> of 0 can also mean that the residuals carry more spatial information than y (<code>I_e_S</code> larger than <code>I_Y_S</code> in the table). The bias term grows with the number of cells (from 0.054 at g = 4 to 0.272 at g = 10 here), so do not add very fine grids to a small data set.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"For every model the spatial information explained decreases with finer grids: for KNN from 0.61 at 4 × 4 cells to 0.38 at 10 × 10 cells, and for the lasso from 0.44 to 0.22."</p></div>
+
+  <h3>3.3 Panel c: SIE and R²</h3>
+  <p><b>What it shows.</b> One point per model: E on the horizontal axis and the mean fold R² on the vertical axis, each with its fold standard error. R² is always 1 − SSE/SST. Without a fold field the vertical axis is R² on all points and there are no error bars; the column <code>R2_pooled</code> is always R² on all points.</p>
+  <p><b>How to read it.</b> R² measures how close the predicted values are; E measures how much spatial information the predictions explain. The two rank the models differently. Here SVR has the highest R² (0.789), while KNN and the neural network have the highest E (0.501). Models with similar R² can differ clearly in E: mars and knn have almost the same R² (0.726 and 0.727) but E of 0.368 and 0.501. Read both error bars before you call a model better: where the crosses of two models overlap in a direction, the models are not separated in that measure.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"R² and SIE rank the models differently. SVR has the highest cross-validated R² (0.79 ± 0.02, mean ± fold standard error), whereas KNN and the neural network explain the most spatial information (E = 0.50). MARS and KNN have nearly the same R² (0.73) but differ in E (0.37 ± 0.03 against 0.50 ± 0.02)."</p></div>
+  <p>Export the figure from the <span class="ui">Chart</span> page as PDF or SVG (vector) or PNG at 300 dpi; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run with the method, the steps, the figure and the tables (<a href="../guide.html#export">Part 1</a>).</p>
+
+  <h3>3.4 Local SIE (new in version 1.6.0)</h3>
+  <figure class="chart">
+    <img src="img/sie/fig-localmaps.webp" style="width: 808px" loading="lazy" alt="Ten maps of Australia, one per model, the grid cells coloured by local SIE from 0 (blue) to 1 (red), with the state boundaries">
+    <figcaption><b>Maps of the local SIE</b>: one map per model on one colour scale from 0 (blue) to 1 (red). The title of each map names the grid scale g that was used.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> E computed again around every grid cell. For each model one scale is used: of the grid scales of the run, the one whose E is nearest the model's multi-scale E (in the example g = 8 for all ten models). The window of a cell is the cell and the cells around it, 3 × 3. In the window y and the residuals are binned again and E = 1 − I(e; S) / I(y; S) is computed as in the whole area, with fewer bins, because a window has far fewer observations. A window with fewer than 30 observations has no value; in the example all 49 cells with observations have one. The run adds a copy of the layer with one field per model, <code>sie_local_&lt;model&gt;</code>: every observation carries the value of its cell.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Model</th><th class="n">Median local SIE</th><th class="n">Largest local SIE</th></tr>
+    <tr><td>xgboost</td><td class="n">0.479</td><td class="n">0.773</td></tr>
+    <tr><td>neural_net</td><td class="n">0.463</td><td class="n">0.813</td></tr>
+    <tr><td>lightgbm</td><td class="n">0.455</td><td class="n">0.791</td></tr>
+    <tr><td>knn</td><td class="n">0.440</td><td class="n">0.813</td></tr>
+    <tr><td>svr</td><td class="n">0.432</td><td class="n">0.817</td></tr>
+    <tr><td>gbm</td><td class="n">0.432</td><td class="n">0.756</td></tr>
+    <tr><td>random_forest</td><td class="n">0.364</td><td class="n">0.737</td></tr>
+    <tr><td>mars</td><td class="n">0.290</td><td class="n">0.781</td></tr>
+    <tr><td>elastic_net</td><td class="n">0.275</td><td class="n">0.635</td></tr>
+    <tr><td>lasso</td><td class="n">0.263</td><td class="n">0.646</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> Compare the same region across the maps. All ten models explain the most spatial information in the west of the continent and the least along the south coast, where several cells are at 0. The linear models (elastic_net, lasso) and mars are low over a wider part of the south and the north than the tree and kernel models. The medians, computed from the fields over the 2480 observations, are not the E of panel a: windows overlap, use one scale and fewer bins, and each is limited to 0 to 1.</p>
+  <p><b>Block and random cross-validation.</b> A run has one set of predictions, so it draws one map per model. To compare the two kinds of cross-validation, run SIE a second time with the predictions made under random cross-validation; both runs stay in <span class="ui">History</span>. The example holds block cross-validation predictions only.</p>
+  <p class="note"><span class="label">How far to trust it</span>The local SIE is an addition of Heterra 1.6.0. It is not defined in Song (2026), there is no R reference for it, and its numbers are therefore not checked against R as the tables are. Use it to explore where the models differ, and report the scale g and the 3 × 3 window with every local number. The report of a run does not yet include the local values.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"A local SIE was computed for each grid cell at g = 8 from the observations of the cell and its eight neighbours (Heterra 1.6.0). All models explain most spatial information in the west of the continent and least along the south coast (Figure X)."</p></div>
+
+  <h3>3.5 Reading the results together</h3>
+  <p>The three panels tell one story: <b>how much</b> spatial information each model explains (panel a), <b>at which scales</b> (panel b), and <b>whether</b> that agrees with accuracy (panel c). SIE is useful when it separates models that R² does not. Read them in this order:</p>
+  <ol>
+    <li>Table <b>Scale profile</b>: check that the bias term at the finest grid is still small next to I(y; S).</li>
+    <li><b>Panel a: SIE by model</b>: the ranking by E, and which gaps are larger than the fold standard errors.</li>
+    <li><b>Panel b: Multi-scale SIE</b>: how much spatial information each model leaves, scale by scale.</li>
+    <li><b>Panel c: SIE and R²</b>: where each model lies on the two axes.</li>
+    <li><b>Maps of the local SIE</b>: where on the map the models differ, as an exploration after the three panels.</li>
+  </ol>
+  <p class="note"><span class="label">What SIE is not</span>It is not a measure of accuracy. Noise without spatial structure in the predictions can also weaken the link between residuals and location, while the accuracy gets worse. Read E together with R² from the same validation, never alone. E is a relative reduction of mutual information, not a share of a fixed total.</p>
+
+  <h3>3.6 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>Spatial information as I(y; S); the out-of-fold residuals and how the folds were made; the number of bins, the grid scales and the bias term; the softmax weights, which depend on y only</td><td>The settings of the run (in the exported report); table <b>Scale profile</b></td></tr>
+    <tr><td>Results</td><td>E of each model with its fold standard error; the scale profile of at least the leading models; E against R², and which models lead on which axis</td><td>Figure <b>SIE of the prediction models</b>; tables <b>SIE and R² by model</b> and <b>Scale profile</b></td></tr>
+    <tr><td>Discussion</td><td>Why mutual information sees structure that an average error hides; whether the ranking holds with other bins and grid scales; the limits of the estimate</td><td>Panel c of the figure; a second run with other parameters. A comparison with random cross-validation needs a second set of predictions, made outside Heterra</td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>Random cross-validation overstates E, because nearby points are in both the training and the test set. In the paper's case it raised E for all ten models, by 2.1 to 17.0% (Song 2026). Use spatial blocks.</li>
+      <li>Fix the bins and the grid scales before you look at the models. Do not choose the scale at which your preferred model looks best.</li>
+      <li>E values can be compared only when the bins, the grid scales and the points are the same. Report E with these settings.</li>
+      <li>Do not use a grid so fine that the bias term is more than about a quarter of I(y; S).</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings. Which model has the highest E, and which the highest mean fold R²? In the Scale profile table, which model has the highest E<sub>r</sub> at grid scale 10?</p>
+    <details><summary>Answer</summary>
+      <p>knn has the highest E (0.501, with neural_net at 0.501 and xgboost at 0.500 next to it). svr has the highest mean fold R² (0.789). At g = 10 the highest E<sub>r</sub> is xgboost's (0.396), ahead of neural_net (0.391) and knn (0.379): the order at one scale is not the order of E.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Explore</span></h4>
+    <p>Open the table <span class="ui">E and R² by fold</span> from the Outputs list. Which fold has the most points? What are E and R² of svr in that fold, and in fold 2? What does this tell you about svr's error bars in panel c?</p>
+    <details><summary>Answer</summary>
+      <p>Fold 5 has 592 points. In it svr has E = 0.409 and R² = 0.872; in fold 2 (441 points) E = 0.220 and R² = 0.748. svr varies more between folds than any other model, so it has the widest error bars in both directions (SE of E 0.033, SE of R² 0.024).</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague writes: "KNN captures the spatial structure of C4 grass cover better than XGBoost and far better than the lasso, because its E is the highest." Check this against the SIE table. Which half of the sentence is justified?</p>
+    <details><summary>Answer</summary>
+      <p>Only the second half. E of knn (0.501, SE 0.022) and of xgboost (0.500, SE 0.011) differ by much less than either standard error, so the data do not separate them. The lasso (0.333, SE 0.029) is lower by several standard errors, so that difference can be reported.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Fit at least two models to your own data under cross-validation in the software you normally use, build the table of section 2.1 and run SIE. Write three sentences for a results section: one on the ranking by E with the standard errors, one on how E changes with the grid scale, and one comparing the ranking by E with the ranking by R². Export the figure as PDF.</p>
+    <details><summary>Checklist</summary>
+      <p>Is every prediction out-of-fold, and were all models given the same folds? Did you say how the folds were made, and give n<sub>b</sub> and the grid scales? Are the differences you report larger than the fold standard errors? Did you say which R² you report (mean of folds or all points)? Does each sentence give a number?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Song, Y. (2026). Spatial information explained by prediction models under block cross-validation. <i>ISPRS Journal of Photogrammetry and Remote Sensing</i> 242: 984–1000. <a href="https://doi.org/10.1016/j.isprsjprs.2026.09.034">doi:10.1016/j.isprsjprs.2026.09.034</a></li>
+    <li>Liu, H., Song, Y., Yi, W. &amp; Zhang, P. (2026). Degree of geocomplexity for diagnosing spatial pattern loss beyond prediction accuracy. <i>GIScience &amp; Remote Sensing</i> 63(1): 2657087. <a href="https://doi.org/10.1080/15481603.2026.2657087">doi:10.1080/15481603.2026.2657087</a></li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

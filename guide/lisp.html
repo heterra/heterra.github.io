@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LISP · Heterra guide</title>
+<meta name="description" content="How to run the local indicator of stratified power (LISP) in Heterra on your own data, read its maps, figures and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="lisp" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb heterogeneity">Part 2 · Spatial heterogeneity · Chapter 2</p>
+  <h1>LISP</h1>
+  <p class="sub">Local indicator of stratified power</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>Where does a variable explain my response, and how strongly there? Does its explanatory power change across the study area?</div>
+    <div><h4>You need</h4>One point layer or table with longitude and latitude in WGS84 degrees, a numeric response y and one or more numeric explanatory variables. At least 30 complete rows.</div>
+    <div><h4>You get</h4>At every location, the local q and its p value for each variable, for pairs of variables and for all variables together, as maps, box plots and a table that sets them against the global q.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>The geographical detector (<a href="opgd.html">Chapter 1</a>) gives one q for a whole study area: the share of the variance of y that the strata of a variable explain. One number hides the places where the variable matters a lot and the places where it does not matter at all. LISP computes the same q <b>locally</b>: around every location it takes a window, discretises each variable inside that window, and computes q and its p value there. The result is a map of explanatory power for each variable.</p>
+  <p class="note">Local extent κ = multiplier × a<br>a is the effective range of the semivariogram of y: the distance up to which values of y are spatially related. The window of a location holds all points within κ of it (at least the 10 nearest). The paper's default multiplier is 2.</p>
+  <p>The size of the window is not chosen by hand. It comes from the response itself: the semivariogram of y is fitted with an exponential model, and its range sets κ.</p>
+
+  <h3>What is computed in each window</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Result</th><th>Strata</th><th>Fields</th></tr>
+    <tr><td>Local q of each variable</td><td>Quantile classes of the variable inside the window (4 by default)</td><td><code>q_&lt;x&gt;</code>, <code>sig_&lt;x&gt;</code></td></tr>
+    <tr><td>Local power of a pair, ω1, ω2, …</td><td>The two variables' classes crossed. The variable with the highest mean local q is paired with the next-ranked ones.</td><td><code>omega1</code>…, <code>sig_omega1</code>…</td></tr>
+    <tr><td>Local power of all variables, ω0</td><td>Zones of a regression tree of y on all variables</td><td><code>omega0</code>, <code>sig_omega0</code></td></tr>
+  </table></div>
+  <p>q and p are computed as in the R packages GD and localsp. A table then sets the local values against the global q of each variable, computed once over all points.</p>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You have run a geographical detector and want to know where each variable's power is high or low.</li>
+    <li>You suspect that the drivers of y differ between parts of the study area.</li>
+    <li>You have point data with enough points for every window to hold a few dozen of them.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Glaciology</td><td>Change of glacier thickness, 2000 to 2020</td><td>Gridded glacier unit</td><td>Hu et al. (2024)</td></tr>
+    <tr><td>Urbanization</td><td>Composite urbanization index</td><td>County</td><td>Sun et al. (2026), with geocomplexity patterns as extra variables, a step outside Heterra</td></tr>
+  </table></div>
+  <p>Any set of point locations with one numeric response and several continuous explanatory variables fits.</p>
+
+  <figure class="paper-fig">
+    <img src="img/lisp/paper-feature.webp" width="1098" height="555" style="width: 780px" loading="lazy" alt="Maps of the local power of eight variables and of its significance, with a violin plot">
+    <figcaption><b>A published result.</b> Local power of eight variables for the change of glacier thickness, each with a map of its significance, and the distribution of the local power of each variable. Source: Hu et al. (2024), Fig. 5.</figcaption>
+  </figure>
+
+  <p class="warn"><span class="label">Keep in mind</span>q rises with the number of strata, so compare like with like: single variables with each other, pairs with each other. A pair or ω0 always has more strata than a single variable, and a higher q for that reason alone. q is a share of the local variance of y, not a coefficient, and it does not show causation.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>One layer with one row per location: points, polygons, a regular grid or a table (<a href="../guide.html#data">Part 1</a> shows how to add data). Since version 1.6.0 a polygon layer can be used directly. The coordinates are two fields you choose; for a layer with geometry you can also choose <span class="ui">Geometry X</span> and <span class="ui">Geometry Y</span>, which for a polygon is a point inside it.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Type</th><th>In the example</th></tr>
+    <tr><td>Longitude, latitude</td><td>Numbers, WGS84 degrees</td><td><code>lon</code>, <code>lat</code></td></tr>
+    <tr><td>Response y</td><td>Number</td><td><code>y</code></td></tr>
+    <tr><td>Explanatory variables</td><td>Numbers, one or more</td><td><code>slope</code>, <code>elevation</code>, <code>lake_area</code>, <code>precipitation</code>, <code>summer_temp</code>, <code>winter_temp</code>, <code>aspect</code>, <code>albedo</code></td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>lisp_boundary</code>: the outline drawn on the maps in the charts. All points stay, and it changes no result.</td></tr>
+  </table></div>
+  <p>The example has 500 simulated points in the study area of the LISP paper, the Greater Himalayas, with eight covariates named after the paper's variables. The values and the boundary are simulated, not observations, so the numbers illustrate the tool and do not describe a real study.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Spatial heterogeneity → LISP</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The points and the boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/lisp/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the 500 points inside the study-area boundary and the LISP panel at step 1">
+    <figcaption>After <b>Load Example</b>: the layers on the left, the map in the middle, the LISP panel on the right at step 1 of 3.</figcaption>
+  </figure>
+  <p>The panel has three steps. <span class="ui">Next</span> moves on; <span class="ui">Run</span> appears at the last step, because only that step computes.</p>
+  <ol class="steps">
+    <li><img src="img/lisp/panel-pre1.webp" loading="lazy" alt="LISP panel, step 1 Data"><b>Data</b>Choose the layer, <span class="ui">Longitude</span> <code>lon</code>, <span class="ui">Latitude</span> <code>lat</code> and the <span class="ui">Response y</span> <code>y</code>, and tick the eight <span class="ui">Explanatory variables</span>. The boundary is optional.</li>
+    <li><img src="img/lisp/panel-pre2.webp" loading="lazy" alt="LISP panel, step 2 Local extent"><b>Local extent</b>Keep the <span class="ui">Local extent multiplier</span> at 2, so that κ = 2 × the range a. Leave <span class="ui">Local extent κ by hand (km, optional)</span> empty.</li>
+    <li><img src="img/lisp/panel-pre3.webp" loading="lazy" alt="LISP panel, step 3 Strata and interactions"><b>Strata and interactions</b>Keep 4 <span class="ui">Discretisation bins</span>, 3 <span class="ui">Interaction pairs</span> and 5 <span class="ui">Strata for the global benchmark</span>. Click <span class="ui">Run</span>.</li>
+  </ol>
+  <p>The run takes about one second. The <span class="ui">Chart</span> page opens with the maps of the variable pairs, and the panel lists every result under <span class="ui">Outputs</span>: the local fields, then the tables, then the figures. A green line says that the results match the reference results computed with R. The local fields are added to a copy of the layer, which appears in the layer list.</p>
+  <figure class="shot">
+    <img src="img/lisp/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the LISP run: the maps of the variable pairs on the Chart page and the results in the panel">
+    <figcaption>After <b>Run</b>: the maps of the variable pairs. The menu above the figure and the Outputs list in the panel open the other figures and the tables.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add your points (<span class="ui">Add Data</span>), open LISP from the Toolbox and choose the layer, the coordinate fields, y and the variables in step 1.</li>
+    <li>Start with the defaults: multiplier 2, 4 bins, 3 pairs. After the run, look at the semivariogram first and at the window sizes in the table <b>Semivariogram fit and local extent</b>.</li>
+    <li>Without a coordinate system on the layer, set <span class="ui">Map units</span> under <span class="ui">Advanced</span> so that the maps get a scale bar and a north arrow. It changes only the charts.</li>
+    <li>If the run warns that κ is at least the largest distance between points, every window holds all locations and the local values are the same everywhere. Type a distance in <span class="ui">Local extent κ by hand (km, optional)</span> in step 2 and run again (see below).</li>
+  </ol>
+  <ul>
+    <li>Coordinates must be WGS84 degrees; projected coordinates are rejected.</li>
+    <li>With a polygon layer the maps in the charts draw the polygons, in the same classes and colours as for points. Nothing is computed from the shapes: the location of a polygon is the pair of coordinates you chose in step 1.</li>
+    <li>Rows with a missing value in any selected field are dropped, and their result fields stay empty. At least 30 complete rows are needed.</li>
+    <li>If the variogram fit fails, y may have no spatial structure at these distances. The advanced option <span class="ui">Variogram fit: Grid search + least squares</span>, with its own cutoff and bins, is an alternative.</li>
+    <li>The run time grows with the number of points times the window size: tens of thousands of points take seconds to minutes.</li>
+    <li>Column names and file names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the semivariogram first (is the window sensible?), then the box plots and the comparison table (which variables matter, on the whole?), then the maps (where?).</p>
+
+  <h3>3.1 Semivariogram and local extent</h3>
+  <figure class="chart">
+    <img src="img/lisp/fig-variogram_plot.webp" style="width: 383px" loading="lazy" alt="Semivariogram of y: empirical points, the fitted exponential model, and dashed lines at the sill, the range a and the local extent kappa">
+    <figcaption><b>Semivariogram and local extent κ</b>: the experimental semivariogram (dots), the fitted exponential model (line), and dashed lines at the sill, at a and at κ.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> How the difference between values of y grows with the distance between points. The semivariogram is computed on an automatic Albers projection of the coordinates, in km, and fitted as the R package automap does. In the example the model rises from a nugget of 0.0027 to a sill of 0.0140; its effective range a is 263 km, so κ = 2 × a = 527 km. The table <b>Semivariogram fit and local extent</b> holds these numbers and the window sizes: 47 to 194 points, 138 at the median.</p>
+  <p><b>How to read it.</b> The dots should follow the curve up to the range and then level off, as they do here up to about 700 km; the two last dots lie above the sill, beyond κ. Then check the windows. Each window is cut into 4 classes for a single variable and into more for a pair, so a window of a few dozen points is small: here the smallest has 47. If the windows are too small, raise the multiplier; if every window covers most of the study area, the local values can hardly differ from the global one.</p>
+  <p><b>When the semivariogram has no sill.</b> Some variables keep rising over the whole study area. The fitted range is then far larger than the area, no multiplier brings κ back inside it, and the run warns that every window holds all locations. Since version 1.6.0 you can set the local extent yourself: type a distance in km in <span class="ui">Local extent κ by hand (km, optional)</span>. The semivariogram is still fitted and drawn, the table keeps the fitted range next to your κ, and the caption of the figure and the log say that κ was set by hand. Heterra does not suggest a value: choose a distance that has a meaning in your study and gives windows of at least a few dozen locations, and report it as your own choice. This option is not part of the method of Hu et al. (2024).</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The local extent was set to twice the effective range of the exponential semivariogram of y (a = 263 km, κ = 527 km; Hu et al. 2024). The local windows held 47 to 194 points (median 138)."</p></div>
+
+  <h3>3.2 Local power and the comparison table</h3>
+  <figure class="chart">
+    <img src="img/lisp/fig-localpower.webp" style="width: 808px" loading="lazy" alt="Two panels of box plots: the local q of each of the eight variables, and the local power of the three pairs and of omega 0">
+    <figcaption><b>Local power</b>: box plots over the 500 locations. a, the local q of each variable; b, the local power of the pairs (ω1 to ω3) and of all variables (ω0).</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The spread of the local values. The table <b>Local and global power of determinants</b> (the paper's Table 2) gives the same in numbers, with the share of locations where p &lt; 0.05 and the global q:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Variable or pair</th><th class="n">Local mean</th><th class="n">Local min to max</th><th class="n">p &lt; 0.05 (%)</th><th class="n">Global q</th></tr>
+    <tr><td>slope</td><td class="n">0.306</td><td class="n">0.167 to 0.550</td><td class="n">100</td><td class="n">0.321</td></tr>
+    <tr><td>elevation</td><td class="n">0.127</td><td class="n">0.004 to 0.506</td><td class="n">61.4</td><td class="n">0.104</td></tr>
+    <tr><td>lake_area</td><td class="n">0.107</td><td class="n">0.019 to 0.319</td><td class="n">76.4</td><td class="n">0.091</td></tr>
+    <tr><td>precipitation</td><td class="n">0.067</td><td class="n">0.001 to 0.227</td><td class="n">39.8</td><td class="n">0.043</td></tr>
+    <tr><td>winter_temp</td><td class="n">0.041</td><td class="n">0.003 to 0.281</td><td class="n">18.6</td><td class="n">0.018</td></tr>
+    <tr><td>albedo</td><td class="n">0.037</td><td class="n">0.001 to 0.310</td><td class="n">9.0</td><td class="n">0.011</td></tr>
+    <tr><td>summer_temp</td><td class="n">0.033</td><td class="n">0.002 to 0.114</td><td class="n">10.2</td><td class="n">0.010</td></tr>
+    <tr><td>aspect</td><td class="n">0.024</td><td class="n">0.000 to 0.133</td><td class="n">11.6</td><td class="n">0.008</td></tr>
+    <tr><td>slope ∩ elevation (ω1)</td><td class="n">0.455</td><td class="n">0.285 to 0.735</td><td class="n">100</td><td class="n">0.431</td></tr>
+    <tr><td>slope ∩ lake_area (ω2)</td><td class="n">0.454</td><td class="n">0.265 to 0.667</td><td class="n">99.0</td><td class="n">0.436</td></tr>
+    <tr><td>slope ∩ precipitation (ω3)</td><td class="n">0.408</td><td class="n">0.265 to 0.650</td><td class="n">97.6</td><td class="n">0.361</td></tr>
+    <tr><td>All variables (ω0)</td><td class="n">0.661</td><td class="n">0.526 to 0.760</td><td class="n">100</td><td class="n">0.564</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> Compare within a group. Among the single variables slope leads, with a mean local q of 0.31, and it is significant everywhere. The range matters as much as the mean: elevation explains 13% on average but up to 51% somewhere, which a global q of 0.10 does not show. A variable with a small global q can still be locally relevant (albedo: global 0.011, local maximum 0.31, significant at 9% of the locations).</p>
+  <p>Do not read the step from single variables to pairs to ω0 as a gain. With this example's windows and 4 bins, the mean local q after shuffling the variables can serve as a baseline: about 0.025 for a single variable, 0.14 for a pair and 0.38 for ω0. The zones of ω0 are grown from y itself and reflect its spatial structure; ω0 can serve as a reference for the other values. The share with p &lt; 0.05 compares variables on the same y. To compare different analyses, keep the unit and the zero of y the same, because p changes when a constant is added to y, while q does not.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Slope has the largest local power of determinant (mean 0.31, range 0.17 to 0.55; significant at all locations, p &lt; 0.05), followed by elevation (mean 0.13, significant at 61% of the locations) and lake area (0.11, 76%). The local power of elevation ranges from 0.004 to 0.51, against a global q of 0.10."</p></div>
+
+  <h3>3.3 Maps of the local q</h3>
+  <figure class="chart">
+    <img src="img/lisp/fig-qmaps.webp" style="width: 808px" loading="lazy" alt="Eight groups of two maps, one group per variable: the local q in five classes above, its p value in three classes below">
+    <figcaption><b>Maps of the local q and its p value</b>: one group per variable under one letter, the local q above and its p value below.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> Where each variable explains y. The q maps use five quintile classes shared by all variables (the table <b>Map classes</b> lists the breaks: 0.016, 0.035, 0.069 and 0.149), so the colours can be compared between maps. The p maps have three classes: p &lt; 0.01, p &lt; 0.05 and p ≥ 0.05.</p>
+  <p><b>How to read it.</b> Read each q map with the p map below it: a high q counts where it is also significant. Because the classes are shared, one variable may fill few of them: slope is in the top class at every location, since its smallest local q (0.167) is above the last break. For elevation, the top class and p &lt; 0.01 cover the west of the area and smaller parts further east, and the centre is not significant. For the pattern inside one variable, map its field yourself: <code>q_slope</code> ranges from 0.17 to 0.55 with no west–east trend, although the simulation raises the coefficient of slope eastwards. q is a share of the local variance of y, not a coefficient.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The local power of elevation is spatially uneven (Figure X b): it is mostly above 0.15 and significant (p &lt; 0.01) in the west of the study area, and is not significant in the centre. Overall it is significant at 61% of the locations."</p></div>
+
+  <h3>3.4 Maps of the variable pairs</h3>
+  <figure class="chart">
+    <img src="img/lisp/fig-pairmaps.webp" style="width: 808px" loading="lazy" alt="Three groups of two maps, one per variable pair: the local power of the pair above, its p value below">
+    <figcaption><b>Maps of the variable pairs</b>: one group per pair, the local power above and its p value below. This is the figure shown first after a run.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The local power of slope crossed with each of the next three variables. The table <b>Variable pairs</b> says which pair each ω is. The three maps share one set of quintile classes, from 0.265 to 0.760, different from the classes of the single variables.</p>
+  <p><b>How to read it.</b> Compare the pairs with each other, not with the single variables. The pairs have about the same mean (0.455, 0.454 and 0.408) but different patterns: slope ∩ elevation is highest at the western end, slope ∩ lake_area in the south. Nearly all locations are significant, as expected when one variable of each pair is slope.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The local power of slope ∩ elevation (mean 0.46, range 0.28 to 0.73) and of slope ∩ lake area (mean 0.45) is significant at 99% of the locations or more; the two pairs peak in different parts of the study area (Figure X)."</p></div>
+
+  <h3>3.5 Maps of ω0</h3>
+  <figure class="chart">
+    <img src="img/lisp/fig-omega0maps.webp" style="width: 808px" loading="lazy" alt="Two maps: omega 0 in five classes, and its p value">
+    <figcaption><b>Maps of ω0 (all variables)</b>: a, ω0 in its own quintile classes; b, its p value.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The local power of all variables together, on regression-tree zones. This map has its own classes, from 0.526 to 0.760, taken from its own values.</p>
+  <p><b>How to read it.</b> ω0 is high everywhere and p &lt; 0.01 at every location, which is expected: the tree's zones are grown from y. Use the map to see where the variables together describe y better or worse, and use ω0 as an upper reference for the single variables and pairs, not as a result to rank against them.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"All variables together (ω0, regression-tree zones) reach a mean local power of 0.66 (range 0.53 to 0.76). Because these zones are derived from y, ω0 is reported as a reference only."</p></div>
+  <p>Export a figure from the <span class="ui">Chart</span> page as PDF or SVG (vector) or PNG at 300 dpi; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run with the method, the steps, the figures and the tables (<a href="../guide.html#export">Part 1</a>).</p>
+
+  <h3>3.6 Reading the results together</h3>
+  <p>The outputs tell one story in steps: <b>how large</b> "local" is (the semivariogram and κ), <b>which</b> variables matter on the whole and how much their power varies (the box plots and the comparison table), <b>where</b> each variable is strong and significant (the maps of the local q), and <b>with which</b> other variable (the maps of the pairs). Read them in this order:</p>
+  <ol>
+    <li><b>Semivariogram and local extent</b>: check that the curve levels off and that the windows hold enough points.</li>
+    <li><b>Local power and the comparison table</b>: the ranking of the variables, the range of each local q, and the local values against the global q.</li>
+    <li><b>Maps of the local q</b>: where each variable explains y, read with the p map below it.</li>
+    <li><b>Maps of the variable pairs</b>: where two variables together explain y, compared between pairs.</li>
+    <li><b>Maps of ω0</b>: a reference for all variables together, not a result to rank.</li>
+  </ol>
+  <p class="note"><span class="label">What LISP is not</span>It is not a local regression: it gives no coefficients, no direction of an effect and no predicted values. It measures how much of the variance of y inside a window the strata of a variable explain. It also does not name the type of an interaction. For a map of predicted values, use a method of <a href="gcf.html">Part 4</a>.</p>
+
+  <h3>3.7 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>The local q; how the local extent is set (semivariogram model, range a, multiplier, κ); the number of bins; how the pairs and ω0 are formed</td><td>The settings of the run (in the exported report); table <b>Semivariogram fit and local extent</b>; table <b>Variable pairs</b></td></tr>
+    <tr><td>Results</td><td>Follow the order of the analysis: local extent, ranking of the variables, maps of the local q, pairs. One finding per subsection, each with a number</td><td>Figures <b>Semivariogram and local extent κ</b>, <b>Local power</b>, <b>Maps of the local q and its p value</b> and <b>Maps of the variable pairs</b>; table <b>Local and global power of determinants</b></td></tr>
+    <tr><td>Discussion</td><td>Sort the variables into three groups: local mean close to the global q with a narrow range (the local view adds little); a wide local range (the global q hides the variation); not significant globally but significant in parts of the area (found only locally). Name the part of the area each conclusion depends on. Say whether the ranking holds with another multiplier or number of bins</td><td>Table <b>Local and global power of determinants</b>; the maps; a second run with another setting</td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>Do not compare q values obtained with different numbers of bins: finer strata explain more variance by construction.</li>
+      <li>A semivariogram that keeps rising and has no sill gives an unstable range, and with it an unstable κ. Interpret such a run with care. If you set κ by hand, say so and give the reason for the distance; do not try several distances and keep the one whose maps you prefer.</li>
+      <li>Report the median number of points in a window. Below about 30, the classes inside a window hold too few points.</li>
+      <li>Only the leading variable is paired with the next-ranked ones. A variable further down the ranking is tested in a pair only if you raise <span class="ui">Interaction pairs</span>.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings and open the table <b>Local and global power of determinants</b>. Which single variable has the second-largest mean local q? Which has the second-largest share of locations with p &lt; 0.05? Which variables have a global q that is not significant at the 0.05 level?</p>
+    <details><summary>Answer</summary>
+      <p>Elevation has the second-largest mean (0.127), but lake_area has the second-largest share of significant locations (76.4%, against 61.4% for elevation). The global q is not significant for winter_temp (p = 0.064), albedo (0.25), summer_temp (0.30) and aspect (0.40).</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Change a setting</span></h4>
+    <p>In step 2, set the <span class="ui">Local extent multiplier</span> to 1 and run again. What is κ now? Which numbers of the comparison table can change, and which cannot? Look at the window sizes in the table <b>Semivariogram fit and local extent</b> before you trust the new maps.</p>
+    <details><summary>Answer</summary>
+      <p>The range a comes from the semivariogram of y and stays 263 km, so κ = 1 × a = 263 km. The windows are smaller, so every local value (mean, minimum, maximum, share with p &lt; 0.05) can change. The global q is computed over all points and stays the same. Smaller windows show finer patterns but leave fewer points per class, so fewer locations may be significant. Both runs stay in <span class="ui">History</span>.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague writes: "All variables together reach a local power of 0.66, twice that of slope (0.31), so the other seven variables add as much explanation as slope." Is the sentence justified?</p>
+    <details><summary>Answer</summary>
+      <p>No. q rises with the number of strata, and ω0 is computed on regression-tree zones grown from y itself. With shuffled variables the mean local q is already about 0.38 for ω0, against about 0.025 for a single variable, so the two numbers are not on the same footing. Compare single variables with each other and pairs with each other, and report ω0 as a reference.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Run LISP on your own points with at least three explanatory variables. Write three sentences for a results section: one on the local extent (a, κ and the window sizes), one on the ranking of the variables (mean local q, its range and the share with p &lt; 0.05), and one on where the leading variable is strong and significant. Export the maps of the local q as PDF.</p>
+    <details><summary>Checklist</summary>
+      <p>Are the coordinates WGS84 degrees? Does the semivariogram level off, and does the smallest window hold enough points for the number of bins? Did you compare single variables only with single variables? Did you read every q map together with its p map? Did you report the local range next to the global q?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Hu, J., Song, Y. &amp; Zhang, T. (2024). A local indicator of stratified power. <i>International Journal of Geographical Information Science</i>. <a href="https://doi.org/10.1080/13658816.2024.2437811">doi:10.1080/13658816.2024.2437811</a></li>
+    <li>Song, Y., Wang, J., Ge, Y. &amp; Xu, C. (2020). An optimal parameters-based geographical detector model enhances geographic characteristics of explanatory variables for spatial heterogeneity analysis: cases with different types of spatial data. <i>GIScience &amp; Remote Sensing</i> 57(5): 593–610. <a href="https://doi.org/10.1080/15481603.2020.1760434">doi:10.1080/15481603.2020.1760434</a> (the q statistic)</li>
+    <li>Sun, Y., Wu, G., Song, Y. et al. (2026). Local effects of pattern interactions in driving urbanization. <i>Int J Appl Earth Obs Geoinf</i> 146: 105072. <a href="https://doi.org/10.1016/j.jag.2025.105072">doi:10.1016/j.jag.2025.105072</a></li>
+    <li>R package localsp: <a href="https://cran.r-project.org/package=localsp">cran.r-project.org/package=localsp</a></li>
+    <li>R package GD: <a href="https://cran.r-project.org/package=GD">cran.r-project.org/package=GD</a></li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

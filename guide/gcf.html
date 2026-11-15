@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCF · Heterra guide</title>
+<meta name="description" content="How to run the generalized covariate field (GCF) in Heterra on your own data, read its figures and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="gcf" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb prediction">Part 4 · Spatial prediction · Chapter 6</p>
+  <h1>GCF</h1>
+  <p class="sub">Generalized covariate field</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>Does the neighbourhood of a location, the pattern and the distribution of each covariate around it, improve a spatial prediction made from the covariates alone?</div>
+    <div><h4>You need</h4>A grid with numeric covariates and projected coordinates, and sample points (or a table with cell IDs) with a numeric response y.</div>
+    <div><h4>You get</h4>New neighbourhood variables on the grid, a stable selection of them, two prediction surfaces (with and without them) and a cross-validation that compares the two.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>A prediction model usually reads each covariate at the location itself: the elevation here, the rainfall here. Often the response also depends on what surrounds the location: the typical value nearby, how variable the surroundings are, whether the location is an outlier among its neighbours. GCF turns each covariate into such neighbourhood variables, keeps the ones that matter in a stable way, and then tests by cross-validation whether they improve a random-forest prediction (Song 2026).</p>
+  <p>It works in three parts, which are the three runs of the tool:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Part</th><th>What it does</th><th>Result</th></tr>
+    <tr><td>Generate the field</td><td>Around every grid cell, the neighbours within each buffer radius give spatial-pattern (P) and neighbourhood-distribution (D) variables. No response is used.</td><td>New fields on a copy of the grid, and a catalogue of them</td></tr>
+    <tr><td>Select variables</td><td>Spatial blocks are resampled B times; each time a random forest ranks all variables. A group of variables passes when one of its members is ranked in the top K often enough.</td><td>The selected set: all raw covariates plus one variable from each group that passed</td></tr>
+    <tr><td>Predict and cross-validate</td><td>One random forest on the raw covariates (the baseline) and one on the selected set, both mapped over the grid and both cross-validated, with the selection repeated inside every fold.</td><td>Two prediction surfaces, and R² and RMSE of both models</td></tr>
+  </table></div>
+
+  <h3>The variables</h3>
+  <p>Each variable is computed for a <b>fine</b> and a <b>broad</b> band of buffer radii (by default the smallest and the largest radius). For every covariate GCF makes 20 P variables and 10 D variables:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Category</th><th>What it describes</th><th>Variables</th></tr>
+    <tr><td>X</td><td>The raw covariate at the location</td><td>Kept as it is, always in the model</td></tr>
+    <tr><td>P, spatial pattern</td><td>How the covariate is arranged around the location</td><td>LISA, local Geary's c, log local variance, rank-quantile entropy, local variogram exponent, z-score and MAD outlier strengths (each fine and broad); geocomplexity and log scale variance (once each)</td></tr>
+    <tr><td>D, neighbourhood distribution</td><td>Which values the covariate takes around the location</td><td>Median, IQR, low tail, high tail and quantile skew of the neighbourhood's quantile curve (each fine and broad)</td></tr>
+  </table></div>
+  <p>The names say what a variable is: <code>x2_D_broad_iqr</code> is the interquartile range of <code>x2</code> in the broad neighbourhood, <code>x3_P_gc</code> the geocomplexity of <code>x3</code>.</p>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You predict a variable over a grid from covariates and suspect that the surroundings of a location matter, as well as its own values.</li>
+    <li>You want to know which neighbourhood properties are used, with names you can interpret, and to map them.</li>
+    <li>You want an honest comparison: the same model with and without the new variables, validated in spatial blocks.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Biodiversity</td><td>Plant species richness in southwest Australia</td><td>10 km grid cell</td><td>Song (2026), with the vegetation plots of Mokany et al. (2022)</td></tr>
+    <tr><td>Simulation</td><td>A spatially autocorrelated random field</td><td>Cell of a 30 × 30 grid</td><td>Song (2026)</td></tr>
+  </table></div>
+  <p>Any response measured at some locations fits, when the covariates are known over a grid or a dense set of points with projected coordinates: soil properties, air quality, species richness, urban indicators.</p>
+
+  <figure class="paper-fig">
+    <img src="img/gcf/paper-feature.webp" width="1600" height="907" style="width: 808px" loading="lazy" alt="The twelve predictors and maps of the nine selected GCF variables in the biodiversity case">
+    <figcaption><b>A published result.</b> The plant species richness case. The twelve predictors are expanded into spatial-pattern and neighbourhood-distribution variables (left), and the nine variables kept by the selection are mapped: a, spatial pattern; b, neighbourhood distribution. Source: Song (2026), Fig. 5.</figcaption>
+  </figure>
+
+  <p class="warn"><span class="label">Keep in mind</span>Stability is not evidence of prediction. A variable can be selected in a stable way and still add nothing: noise passes too. The cross-validation is the evidence that the GCF variables help.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>Two layers are needed and a third is optional (<a href="../guide.html#data">Part 1</a> shows how to add data).</p>
+  <div class="table-wrap"><table>
+    <tr><th>Layer</th><th>Content</th><th>In the example</th></tr>
+    <tr><td>Grid</td><td>One row per cell (points, polygon cells or a raster grid) with numeric covariates and projected coordinates</td><td>About 7400 cells of 1 km with <code>x1</code>, <code>x2</code>, <code>x3</code></td></tr>
+    <tr><td>Samples</td><td>One row per sampled location with the response y; points, or a table with a cell ID</td><td>900 random points with <code>y1</code>, attached to the nearest cell centre</td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td>The study area's outline. It only shapes the maps in the charts and changes no result.</td></tr>
+  </table></div>
+  <p>All three layers of the example are simulated, so its numbers illustrate the tool and do not describe a real study. The coordinates are in km with no coordinate system. <code>y1</code> was made to respond to the neighbourhood of a location: the mean of <code>x1</code> and the spread of <code>x2</code> around it, besides <code>x3</code> itself and a smooth field that no covariate shows.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Spatial prediction → GCF</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The grid, the sample points and the boundary appear as three layers, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/gcf/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the grid, the 900 sample points and the boundary on the map, and the GCF panel at step 1 of 5">
+    <figcaption>After <b>Load Example</b>: the grid cells with the sample points on top and the boundary around them; the GCF panel on the right at step 1 of 5.</figcaption>
+  </figure>
+  <p>The panel has five steps and three runs. <span class="ui">Run</span> appears at steps 2, 4 and 5; a green tick on a step's button shows that its run is done. The pictures below show the panel after the runs.</p>
+  <ol class="steps five">
+    <li><img src="img/gcf/panel-post1.webp" loading="lazy" alt="GCF panel, step 1 Covariates"><b>Covariates</b>Choose the grid and tick the covariates: <code>x1</code>, <code>x2</code>, <code>x3</code>. The coordinates <code>x</code> and <code>y</code> stay unticked.</li>
+    <li><img src="img/gcf/panel-post2.webp" loading="lazy" alt="GCF panel, step 2 Scales, with buffer radii 2, 4, 6 and the outputs of the run"><b>Scales</b><span class="ui">Buffer radii</span> 2, 4, 6 and <span class="ui">Quantile step</span> 0.1. Click <span class="ui">Run</span>: 90 new fields are added to a copy of the grid.</li>
+    <li><img src="img/gcf/panel-post3.webp" loading="lazy" alt="GCF panel, step 3 Modelling data"><b>Modelling data</b>The grid with the new fields, the three covariates and all 90 GCF variables are filled in from that run. Choose the samples and <code>y1</code>.</li>
+    <li><img src="img/gcf/panel-post4.webp" loading="lazy" alt="GCF panel, step 4 Variable selection, with block size 16 and B = 10"><b>Variable selection</b><span class="ui">Spatial block size L</span> 16, <span class="ui">Stability resamples B</span> 10. Click <span class="ui">Run</span>: the selected variables are shown.</li>
+    <li><img src="img/gcf/panel-post5.webp" loading="lazy" alt="GCF panel, step 5 Prediction and validation, with 5 folds and the boundary"><b>Prediction and validation</b>5 folds, spatial blocks and random, and the boundary for the maps. Click <span class="ui">Run</span>.</li>
+  </ol>
+  <p>Three things are worth knowing while you step through. In step 3, leave the cell IDs empty to match the samples by location; several points in one cell are averaged. The run at step 4 cannot be skipped: step 5 runs after it, and repeats the selection inside its folds. And the tutorial uses B = 10 resamples and smaller forests to stay quick; for real work keep the defaults, which are the paper's (B = 80, and 200 and 500 trees).</p>
+  <p>After the last run the <span class="ui">Chart</span> page opens with the feature figure, and the panel lists every result under <span class="ui">Outputs</span>: the prediction fields, the tables, then the figures. A green line says that the results match the reference results computed with R.</p>
+  <figure class="shot">
+    <img src="img/gcf/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the third GCF run: the feature figure on the Chart page and the panel at step 5 with green ticks on steps 2, 4 and 5">
+    <figcaption>After the run at step 5: the feature figure. The layer list now also holds the two copies of the grid, with the GCF variables and with the predictions.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add the grid and the samples (<span class="ui">Add Data</span>), open GCF from the Toolbox and choose the grid and its covariates in step 1.</li>
+    <li>Start with buffer radii of 2 to 10 grid spacings, in the units of the grid's coordinates. They can be typed as a list or as from:to:by.</li>
+    <li>Set the block size L above the range of the residual spatial dependence; the paper uses twice the residual variogram range. Keep B = 80 and the default numbers of trees.</li>
+  </ol>
+  <ul>
+    <li>Coordinates must be projected, because the buffers are in their units. For a layer in longitude and latitude, step 1 asks for a <span class="ui">Projected CRS for computing</span>, which is kept with the run. What the map displays has no effect on the result.</li>
+    <li>The chosen response is not offered among the variables, and a grid field with the name of y is refused: a model given y to predict y says nothing.</li>
+    <li>A missing covariate value is replaced by the median only inside the generated variables. The raw covariate is not filled, and a missing value at a grid cell stops the prediction step. Constant covariates are dropped.</li>
+    <li>With few samples or few blocks, lower B, the number of folds K or the block size.</li>
+    <li>Since version 1.6.0, when the grid is a layer of polygon cells the maps in the charts draw the polygons, coloured by value.</li>
+    <li>Column names, category values and file names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the selected variables first (what was kept?), then the cross-validation (do they help?), then the maps and the scatter (where and how well?).</p>
+
+  <h3>3.1 Selected variables</h3>
+  <figure class="chart">
+    <img src="img/gcf/fig-selectedplot.webp" style="width: 531px" loading="lazy" alt="Bubble chart of the six selected GCF variables: covariate on the x axis, category and statistic on the y axis, bubble area the absolute correlation with y1, red positive and blue negative">
+    <figcaption><b>Selected variables</b>, shown first after step 4: one bubble per selected variable, at its covariate (x) and its category, operator or statistic and band (y).</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The bubble's area is |r| and its colour the sign of r, where r is the Pearson correlation between the variable and y over the samples. The table <b>Selected variables and their correlation with y</b> gives the numbers; the table <b>Selected variables</b> adds each variable's selection frequency, the share of the resamples in which it was ranked in the top K.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Variable</th><th>Covariate</th><th>Category</th><th>Band</th><th class="n">r</th><th class="n">Frequency</th></tr>
+    <tr><td>x1_D_fine_med</td><td>x1</td><td>D</td><td>fine</td><td class="n">0.739</td><td class="n">1.0</td></tr>
+    <tr><td>x2_D_broad_iqr</td><td>x2</td><td>D</td><td>broad</td><td class="n">0.395</td><td class="n">1.0</td></tr>
+    <tr><td>x2_P_lvar_broad</td><td>x2</td><td>P</td><td>broad</td><td class="n">0.391</td><td class="n">1.0</td></tr>
+    <tr><td>x3_D_fine_med</td><td>x3</td><td>D</td><td>fine</td><td class="n">0.330</td><td class="n">1.0</td></tr>
+    <tr><td>x3_P_gc</td><td>x3</td><td>P</td><td>single</td><td class="n">−0.418</td><td class="n">0.8</td></tr>
+    <tr><td>x1_P_gc</td><td>x1</td><td>P</td><td>single</td><td class="n">0.022</td><td class="n">0.6</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> Six of the 90 GCF variables were kept, next to the three raw covariates, which are always in the model. The selection recovers what the simulation put in: the local median of <code>x1</code> has the strongest correlation with <code>y1</code>, and two measures of the spread of <code>x2</code> in the broad neighbourhood were chosen. A group (one covariate's P variables, or its D variables) contributes one member only, so other variables with a frequency of 1.0 are listed as not selected. r is a description, not the selection rule: <code>x1_P_gc</code> was selected with r = 0.02. Whether the set helps is decided in the next section.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The generalized covariate field (Song 2026) was generated for the three covariates with buffer radii of 2, 4 and 6 km (90 variables). Stability selection in spatial blocks of 16 km (B = 10, π = 0.6, top 20) kept six variables in addition to the raw covariates (Table X); the neighbourhood median of x1 had the strongest correlation with y1 (r = 0.74)."</p></div>
+
+  <h3>3.2 Cross-validation and the prediction map</h3>
+  <figure class="chart">
+    <img src="img/gcf/fig-predictionplot.webp" style="width: 765px" loading="lazy" alt="Bar charts of cross-validated R² of the baseline and GCF under spatial-block and random folds, with the change written above, and the map of the GCF prediction inside the boundary">
+    <figcaption><b>Cross-validated R² and the GCF prediction</b>: a and b, R² of the baseline and of GCF (mean over the folds, bars ± SD) in spatial-block and random folds; c, the map of <code>pred_gcf</code>.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The baseline is a random forest on the raw covariates; GCF is the same forest on the selected set. In every fold the selection is run again on the training samples only, so the test samples play no part in it. R² = 1 − SSE/SST. The table <b>Cross-validation</b> has one row per partition:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Folds</th><th>Model</th><th class="n">R² (mean ± SD)</th><th class="n">RMSE</th><th class="n">Pooled R²</th></tr>
+    <tr><td>Spatial blocks</td><td>Baseline (X)</td><td class="n">0.493 ± 0.100</td><td class="n">1.026</td><td class="n">0.570</td></tr>
+    <tr><td>Spatial blocks</td><td>GCF</td><td class="n">0.713 ± 0.108</td><td class="n">0.752</td><td class="n">0.766</td></tr>
+    <tr><td>Random</td><td>Baseline (X)</td><td class="n">0.649 ± 0.065</td><td class="n">0.909</td><td class="n">0.658</td></tr>
+    <tr><td>Random</td><td>GCF</td><td class="n">0.836 ± 0.015</td><td class="n">0.624</td><td class="n">0.839</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> Compare the two models within a partition. Under spatial-block folds R² rises from 0.49 to 0.71 and RMSE falls from 1.03 to 0.75. The number above the bars (+44.6%) is the change as a percentage of the baseline's R², not a difference in percentage points; when the baseline's R² is negative its sign is misleading, so compare the two R² values directly there. Always set the gain against the fold SD: a gain smaller than the SD of the folds is not established. Random folds give higher values for both models (0.65 and 0.84), because test samples lie next to training samples; say which partition you report. The "pooled" columns compute R² once over all out-of-fold predictions and differ from the fold means.</p>
+  <p>The map shows <code>pred_gcf</code> at the cells inside the boundary. The prediction layer and the tables keep every cell, with three fields: <code>pred_base</code>, <code>pred_gcf</code> and <code>pred_diff</code> = <code>pred_gcf</code> − <code>pred_base</code>. Map <code>pred_diff</code> to see where the GCF variables change the prediction.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"In five-fold spatial-block cross-validation, with the variable selection repeated in every fold, GCF raised R² from 0.49 ± 0.10 (raw covariates) to 0.71 ± 0.11 and lowered RMSE from 1.03 to 0.75; in random folds R² rose from 0.65 ± 0.06 to 0.84 ± 0.01 (R² = 1 − SSE/SST, mean ± SD over folds)."</p></div>
+
+  <h3>3.3 Observed against predicted</h3>
+  <figure class="chart">
+    <img src="img/gcf/fig-scatter.webp" style="width: 383px" loading="lazy" alt="Scatter of observed y1 against the out-of-fold GCF prediction under spatial-block folds, with the 1:1 line and R² = 0.766">
+    <figcaption><b>Observed vs predicted</b>: each point is a sampled cell, predicted by the GCF model of a spatial-block fold that did not contain it. The dashed line is the 1:1 line.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The out-of-fold predictions of the GCF model against the observed values, for the 844 sampled cells (the 900 points, averaged where several fall in one cell).</p>
+  <p><b>How to read it.</b> Points along the dashed line are predicted well; a cloud flatter than the line means that high values are under-predicted and low values over-predicted. The R² written in the chart (0.766) is pooled over all out-of-fold values, so it is not the fold mean of the bar chart (0.713). Give one of them and say which. The table <b>Out-of-fold predictions</b> has the values behind the chart, for both models and both partitions.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Observed and out-of-fold predicted values under spatial-block cross-validation follow the 1:1 line (pooled R² = 0.77, n = 844; Figure X)."</p></div>
+
+  <h3>3.4 Maps of the selected variables</h3>
+  <figure class="chart">
+    <img src="img/gcf/fig-selectedmaps.webp" style="width: 765px" loading="lazy" alt="Six maps of the selected GCF variables over the grid, each with its own colour bar">
+    <figcaption><b>Maps of the selected GCF variables</b>: a to f, the six selected variables at the grid cells. Each map has its own colour scale.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The figure <b>Maps of the selected GCF variables</b> draws each selected P and D variable at the grid cells, as the prediction reads it: six maps to a page (landscape A4, three across and two down), further variables on the next page.</p>
+  <p><b>How to read it.</b> Each map has its own colour scale: compare places within a map, not colours between maps. In the tutorial the colours follow the kind of variable (a local median in green, LISA and skew in red and blue about 0); with your own data each map gets a different palette by default, or colours by kind under <span class="ui">Colours of the variable maps</span> (Advanced). Use these maps to say in words what a selected variable picks up, for example where the surroundings of <code>x2</code> are most variable.</p>
+
+  <h3>3.5 The feature figure</h3>
+  <figure class="chart">
+    <img src="img/gcf/fig-feature.webp" style="width: 765px" loading="lazy" alt="GCF feature figure with four panels: selected variables, cross-validated R², map of the GCF prediction, observed against predicted">
+    <figcaption><b>Feature figure</b>: a, the selected variables; b, cross-validated R² of the baseline and of GCF, with the change above the bars; c, the map of <code>pred_gcf</code>; d, observed against out-of-fold predicted values (spatial-block folds).</figcaption>
+  </figure>
+  <p>The feature figure holds all of GCF's charts on one page, one journal page wide. With <span class="ui">Map units</span> (Advanced) known, the map has no axes and carries a north arrow and a scale bar; the tutorial sets the units to kilometres because its coordinates have no coordinate system. This changes only the charts. Export the figure from the <span class="ui">Chart</span> page as PDF or SVG (vector) or PNG at 300 dpi; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run (<a href="../guide.html#export">Part 1</a>).</p>
+
+  <h3>3.6 Reading the results together</h3>
+  <p>The three runs tell one story: the covariates are <b>expanded</b> into neighbourhood variables (step 2), a few of them are <b>kept</b> because they are chosen again and again (step 4), and the cross-validation shows whether the kept set <b>helps</b> the prediction (step 5). Read them in this order:</p>
+  <ol>
+    <li><b>Selected variables</b>: what was kept, and how often it was chosen.</li>
+    <li><b>Cross-validation</b>: whether GCF is ahead of the baseline, first of all in spatial-block folds, and by more than the fold SD.</li>
+    <li><b>Maps of the selected variables</b>: whether the kept variables show spatial structure that you can name.</li>
+    <li><b>The prediction map and observed against predicted</b>: where GCF changes the prediction (<code>pred_diff</code>) and how well the high and low values are met.</li>
+  </ol>
+  <p class="note"><span class="label">What GCF is not</span>It is not a prediction model of its own. It makes new variables from the covariates, and a model then uses them; in Heterra this model is a random forest. It also does not give the contribution of a single variable: the cross-validation tests the selected set as a whole.</p>
+
+  <h3>3.7 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>The P and D variables; the buffer radii and the two bands; the selection (block size L, B, π, top K); the two kinds of folds; that the selection is repeated inside every fold</td><td>The settings of the three runs (in the exported report); table <b>Variable catalogue</b></td></tr>
+    <tr><td>Results</td><td>Follow the order of the analysis: how many variables were generated and which were kept, with their frequencies; then R² and RMSE of the baseline and of GCF in both kinds of folds, as mean ± SD; then the prediction map</td><td>Figure <b>Feature figure</b> or the single figures; tables <b>Selected variables</b> and <b>Cross-validation</b></td></tr>
+    <tr><td>Discussion</td><td>What the kept variables describe; whether the gain is larger in spatial-block folds, that is, when predicting away from the samples; where the two predictions differ</td><td>Figure <b>Maps of the selected GCF variables</b>; a map of <code>pred_diff</code></td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>Every covariate must be known at every grid cell, because the GCF variables are also computed at the cells to predict.</li>
+      <li>Choose buffer radii from about one cell up to the range of the spatial dependence of the response, or beyond it. The variogram that gives this range is fitted outside Heterra.</li>
+      <li>Lower B only while you try settings. Use the default again for the run that you report.</li>
+      <li>Report the buffer radii, the bands, B, π, K, the block size L and the seeds, so that a reader can repeat the run.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the three runs of the example with their settings. Which selected variable has a negative correlation with <code>y1</code>, and how large is it? What are the RMSE of the baseline and of GCF under random folds?</p>
+    <details><summary>Answer</summary>
+      <p><code>x3_P_gc</code>, the geocomplexity of x3, with r = −0.418: it is the only blue bubble. Under random folds the RMSE is 0.909 for the baseline and 0.624 for GCF (table Cross-validation).</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Explore</span></h4>
+    <p>Open the table <b>Selected variables</b> of the run at step 4 and look at the columns <code>frequency</code> and <code>group_fire</code>. A group passes when any of its members is in the top K in at least a share π of the resamples (π = 0.6 here). Which selected variable would not pass with π = 0.7? Check by setting <span class="ui">Group threshold π</span> to 0.7 and running step 4 again.</p>
+    <details><summary>Answer</summary>
+      <p><code>x1_P_gc</code>. Its group, the P variables of x1, was in the top K in 0.6 of the resamples, exactly at the threshold. The P group of x3 has 0.9 and the other groups 1.0, so the other five variables stay. Both runs are kept in <span class="ui">History</span>.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague writes: "The geocomplexity of x1 was selected by the stability procedure, so it is an important predictor of y1." Check this against the tables. Is the sentence justified?</p>
+    <details><summary>Answer</summary>
+      <p>No. <code>x1_P_gc</code> passed at the lowest possible frequency (0.6) and its correlation with y1 is 0.02. Stability is not evidence of prediction: noise passes too. What the results support is a statement about the set: with the selected variables, cross-validated R² under spatial blocks rises from 0.49 to 0.71. They do not show the contribution of a single variable.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Run GCF on your own grid and samples with the default B and numbers of trees. Write three sentences for a results section: one on the settings (buffer radii, block size, B) and the variables selected, one on R² and RMSE of the baseline and of GCF under spatial-block folds, and one on what the map of <code>pred_diff</code> shows. Export the feature figure as PDF.</p>
+    <details><summary>Checklist</summary>
+      <p>Is the block size larger than the range of the residual spatial dependence? Did you give the fold SD with each R², and is the gain larger than it? Did you say whether R² is the fold mean or pooled, and which partition it comes from? Did you avoid claims about single selected variables that the cross-validation does not test?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Song, Y. (2026). Generalized covariate field (GCF): spatial-pattern and neighbourhood-distribution feature expansion improves geospatial prediction. <i>International Journal of Geographical Information Science</i> 40: 1–29. <a href="https://doi.org/10.1080/13658816.2026.2729719">doi:10.1080/13658816.2026.2729719</a></li>
+    <li>Mokany, K., McCarthy, J.K., Falster, D.S., Gallagher, R.V., Harwood, T.D., Kooyman, R. &amp; Westoby, M. (2022). Patterns and drivers of plant diversity across Australia. <i>Ecography</i> 2022(11): e06426. <a href="https://doi.org/10.1111/ecog.06426">doi:10.1111/ecog.06426</a></li>
+    <li>R package gcf: <a href="https://cran.r-project.org/package=gcf">cran.r-project.org/package=gcf</a>. Heterra's results match gcf 0.1.1, with ranger 0.18.0 and randomForest 4.7-1.2.</li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOS · Heterra guide</title>
+<meta name="description" content="How to run geographically optimal similarity (GOS) in Heterra on your own data, read its maps, chart and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="gos" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb prediction">Part 4 · Spatial prediction · Chapter 7</p>
+  <h1>GOS</h1>
+  <p class="sub">Geographically optimal similarity</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>What is the value of my variable at locations without samples, judged from the samples whose covariates are most similar, and how far can each prediction be trusted?</div>
+    <div><h4>You need</h4>A samples layer with a numeric response y and at least two numeric covariates, and usually a prediction grid with the same covariate fields. At least 30 usable samples.</div>
+    <div><h4>You get</h4>The optimal share of similar samples (λ), a prediction and an uncertainty at every grid location, and the accuracy of GOS against two other models.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>GOS rests on a simple principle: locations with a similar geographical configuration, that is, similar values of the covariates, have similar values of the response. To predict at a new location, it finds the samples whose covariates are most similar to that location's and averages their values of y, giving more weight to the more similar ones (Song 2022). Distance between locations plays no part: a sample far away with the same slope, vegetation and soil counts more than a neighbour in a different setting.</p>
+  <p class="note">For each covariate, a Gaussian similarity between the prediction location and every sample.<br>Over the covariates, the similarities are combined with a minimum: two locations are as similar as their least similar covariate.<br>Only the share κ of the most similar samples is kept; the prediction is their similarity-weighted mean.<br>Uncertainty = 1 − the ζ-quantile of the retained similarities.</p>
+  <p>How many samples to keep is the one choice that matters, and GOS makes it by cross-validation: each candidate κ is scored on repeated random splits of the samples into a training and a test part, and the κ with the lowest mean RMSE is the optimal one, written λ. With κ = 1 all samples are used; this is the basic configuration similarity (BCS) model, which GOS is compared with.</p>
+
+  <figure class="paper-fig">
+    <img src="img/gos/paper-schematic.webp" width="1422" height="1330" style="width: 610px" loading="lazy" alt="Schematic of GOS in four stages: geographical configurations, similarity, optimal similarity, prediction and uncertainty">
+    <figcaption><b>How the method works.</b> Stage 1 describes every location by its covariates. Stage 2 computes a similarity E for each covariate and combines them into one similarity S between the unknown location and each sample. Stage 3 finds by cross-validation the threshold λ and keeps only the most similar samples (the red points); stage 4 predicts from them and gives the uncertainty. Source: Song (2022), Fig. 1.</figcaption>
+  </figure>
+
+  <h3>What a run gives</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Result</th><th>Question</th><th>Form</th></tr>
+    <tr><td>Optimal similarity</td><td>Which share κ of the most similar samples predicts best?</td><td>Cross-validation RMSE of each κ, as a chart and a table; the lowest is λ</td></tr>
+    <tr><td>Accuracy</td><td>Does GOS predict better than BCS and than a linear regression?</td><td>MAE and RMSE of the three models on the same splits, and the error reduction by GOS in %</td></tr>
+    <tr><td>Prediction</td><td>What is y at each grid location?</td><td>Fields on a copy of the grid, and a map</td></tr>
+    <tr><td>Uncertainty</td><td>Where are there few samples similar to the location?</td><td>Six fields, for six values of ζ, and a map of one of them</td></tr>
+  </table></div>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You have point samples of a variable and covariates that cover the whole area, and want a map of the variable.</li>
+    <li>The relation between y and the covariates is not linear, or differs between settings, so that a single regression fits poorly.</li>
+    <li>You want an uncertainty at every location that says where the samples do not represent the area.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Geochemistry</td><td>Trace elements in soil (Cu, Zn, Pb)</td><td>Sample point, predicted on a grid</td><td>Song (2022)</td></tr>
+    <tr><td>Soil mapping</td><td>Soil properties, from few samples</td><td>Sample point</td><td>Zhu et al. (2015), the BCS model (κ = 1)</td></tr>
+  </table></div>
+  <p>Any response measured at some locations fits, when the covariates are known at every location to predict: soil properties, air quality, species abundance, house prices, disease incidence.</p>
+
+  <figure class="paper-fig">
+    <img src="img/gos/paper-feature.webp" width="1500" height="574" style="width: 808px" loading="lazy" alt="Curve of cross-validation RMSE against kappa, a prediction map and an uncertainty map">
+    <figcaption><b>A published result.</b> GOS for copper in soil. Left: the cross-validation RMSE against κ, with its lowest point at λ = 0.05. Right: the prediction and its uncertainty at ζ = 0.9. Source: Song (2022).</figcaption>
+  </figure>
+
+  <p class="warn"><span class="label">Keep in mind</span>The uncertainty is a measure of similarity, not an error in the units of y: high uncertainty means that few samples resemble the location. And because the model does not use coordinates, it cannot pick up a spatial trend that none of the covariates carries.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>Two layers, in any format Heterra reads (<a href="../guide.html#data">Part 1</a> shows how to add data).</p>
+  <div class="table-wrap"><table>
+    <tr><th>Layer or field</th><th>Content</th><th>In the example</th></tr>
+    <tr><td>Samples</td><td>One row per observation: points, polygons or a table</td><td>894 soil samples</td></tr>
+    <tr><td>Response y</td><td>Number</td><td><code>Zn</code>, soil zinc in mg/kg</td></tr>
+    <tr><td>Covariates</td><td>At least two numbers</td><td><code>Slope</code>, <code>Water</code>, <code>NDVI</code>, <code>SOC</code>, <code>pH</code>, <code>Road</code>, <code>Mine</code></td></tr>
+    <tr><td>Prediction grid (optional)</td><td>The locations to predict (raster cells or points), with covariate fields of the same names and no y</td><td>13,132 cells of 1 km</td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>gos_boundary</code>: the outline on the maps in the charts, which show only the cells inside it. It changes no result.</td></tr>
+  </table></div>
+  <p>Unlike most examples in this guide, this one is not simulated: it is the case of the paper, soil zinc in the Leonora district, Western Australia.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Spatial prediction → GOS</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The samples, the grid and the boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/gos/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the prediction grid inside the study-area boundary on the map and the GOS panel at step 1">
+    <figcaption>After <b>Load Example</b>: three layers on the left; the prediction grid fills the study area and covers most of the sample points; the GOS panel on the right at step 1 of 3.</figcaption>
+  </figure>
+  <p>The panel has three steps. <span class="ui">Next</span> moves on; <span class="ui">Run</span> appears at the last step, because only that step computes.</p>
+  <ol class="steps">
+    <li><img src="img/gos/panel-pre1.webp" loading="lazy" alt="GOS panel, step 1 Data"><b>Data</b>Choose the <span class="ui">Samples</span> and the <span class="ui">Prediction grid</span>, the <span class="ui">Response y</span> (<code>Zn</code>) and tick the seven covariates.</li>
+    <li><img src="img/gos/panel-pre2.webp" loading="lazy" alt="GOS panel, step 2 Response"><b>Response</b><span class="ui">Log-transform the response</span> on, and <span class="ui">Remove outliers</span> at 2.5 standard deviations. Nine samples are removed.</li>
+    <li><img src="img/gos/panel-pre3.webp" loading="lazy" alt="GOS panel, step 3 κ and validation"><b>κ and validation</b>Keep the candidate κ (0.01, 0.03, 0.05, 0.08, 0.2, 1), 3 repeats and a training share of 0.5. Click <span class="ui">Run</span>.</li>
+  </ol>
+  <p>The run takes about one second. The <span class="ui">Chart</span> page opens with the prediction figure, and the panel lists every result under <span class="ui">Outputs</span>: the tables, the prediction fields and the figures. A green line says that the results match the reference results computed with R.</p>
+  <figure class="shot">
+    <img src="img/gos/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the GOS run: the figure with the prediction map, the uncertainty map and the κ–RMSE chart on the Chart page, and the results in the panel">
+    <figcaption>After <b>Run</b>: the figure with the prediction, the uncertainty and the optimal similarity. A copy of the grid with the prediction fields has been added to the layers.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add the samples and the grid (<span class="ui">Add Data</span>), open GOS from the Toolbox and choose both layers in step 1.</li>
+    <li>Choose y and at least two covariates. Leave out identifiers and coordinates, which are listed with the other numeric fields.</li>
+    <li>Turn on the log transform for a strongly right-skewed response (y must then be above 0). Start with the default κ values and add values around the minimum if the curve is still falling at one end.</li>
+  </ol>
+  <ul>
+    <li>The grid must contain every covariate you select, with the same field names. Grid rows with a missing covariate are skipped (their results are NA); samples with a missing y or covariate are dropped.</li>
+    <li>At least 30 usable samples and 2 covariates. A constant covariate makes the similarity undefined and the run stops; remove it.</li>
+    <li>Coordinates are not used by the model, only for the maps. Since version 1.6.0, when the grid is a polygon layer the maps draw its polygons, coloured by value.</li>
+    <li>The similarity scale depends on all grid cells together: predicting a grid in parts, or a thinned grid, gives slightly different numbers, as in the R package.</li>
+    <li>Without a grid, GOS predicts the held-out samples of the first split, and the fields are written to the samples layer.</li>
+    <li>Column names, category values and file names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the κ–RMSE chart first (which κ, and how clear is the choice?), then the accuracy table (is GOS better than the alternatives?), then the two maps (what is predicted, and where is it weak?).</p>
+
+  <h3>3.1 Optimal similarity</h3>
+  <figure class="chart">
+    <img src="img/gos/fig-kappa_rmse_chart.webp" style="width: 383px" loading="lazy" alt="Line chart of cross-validation RMSE against κ on a log scale, with the minimum at κ = 0.08 marked in red and a dashed line labelled λ = 0.08">
+    <figcaption><b>Optimal similarity (κ–RMSE)</b>: the mean cross-validation RMSE of each candidate κ. The red point and the dashed line mark λ.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> For each κ, the RMSE on the test samples, averaged over the 3 random splits (50% training). The table <b>κ and cross-validation RMSE</b> has the same numbers:</p>
+  <div class="table-wrap"><table>
+    <tr><th class="n">κ</th><th class="n">Cross-validation RMSE</th><th></th></tr>
+    <tr><td class="n">0.01</td><td class="n">0.6884</td><td></td></tr>
+    <tr><td class="n">0.03</td><td class="n">0.6709</td><td></td></tr>
+    <tr><td class="n">0.05</td><td class="n">0.6671</td><td></td></tr>
+    <tr><td class="n">0.08</td><td class="n">0.6640</td><td>λ, the optimum</td></tr>
+    <tr><td class="n">0.2</td><td class="n">0.6667</td><td></td></tr>
+    <tr><td class="n">1</td><td class="n">0.6706</td><td>All samples: the BCS model</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> The curve falls, reaches its minimum at λ = 0.08 and rises again: using the 8% most similar samples predicts best here. Very few samples (κ = 0.01) give the largest error, and using all of them (κ = 1) is worse than the optimum. Look at the vertical axis before drawing conclusions: the whole curve spans 0.664 to 0.688, so the choice of κ changes the error only a little in this case. Because y is log-transformed, the RMSE is on the log scale, not in mg/kg. If the minimum is at the first or last candidate, add candidates beyond it and run again. The table <b>RMSE per κ and repeat</b> shows how much the three splits differ.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The optimal similarity was determined by cross-validation over κ = 0.01, 0.03, 0.05, 0.08, 0.2 and 1 (3 random splits, 50% training). The lowest mean RMSE, 0.664 on the log scale, was reached at λ = 0.08 (Figure X)."</p></div>
+
+  <h3>3.2 Accuracy: GOS, BCS and linear regression</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Model</th><th class="n">κ</th><th class="n">MAE</th><th class="n">RMSE</th><th class="n">MAE reduction by GOS</th><th class="n">RMSE reduction by GOS</th></tr>
+    <tr><td>GOS</td><td class="n">0.08</td><td class="n">0.516</td><td class="n">0.664</td><td class="n"></td><td class="n"></td></tr>
+    <tr><td>BCS</td><td class="n">1</td><td class="n">0.525</td><td class="n">0.671</td><td class="n">1.6%</td><td class="n">1.0%</td></tr>
+    <tr><td>MLR</td><td class="n"></td><td class="n">0.554</td><td class="n">0.699</td><td class="n">6.9%</td><td class="n">5.0%</td></tr>
+  </table></div>
+  <p><b>What it shows.</b> The mean absolute error and the RMSE of GOS at κ = λ, of BCS and of a multiple linear regression (MLR) with the same covariates, all on the same splits as the κ search. The last two columns say by how many per cent GOS lowers each model's error.</p>
+  <p><b>How to read it.</b> GOS has the lowest MAE and RMSE of the three. Report the size of the gain as well as its direction: against the linear regression the RMSE is 5.0% lower, against BCS 1.0%. With a log-transformed y the errors are on the log scale and cannot be read as mg/kg. The values are means of three splits; with more <span class="ui">Repeats</span> they are steadier.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"On the same three random splits, GOS (κ = 0.08) had lower errors (MAE 0.516, RMSE 0.664, log scale) than BCS (0.525, 0.671) and multiple linear regression (0.554, 0.699); it reduced RMSE by 1.0% and 5.0%."</p></div>
+
+  <h3>3.3 Prediction and uncertainty</h3>
+  <figure class="chart">
+    <img src="img/gos/fig-predictionplot.webp" style="width: 808px" loading="lazy" alt="Three panels: map of the predicted Zn, map of the uncertainty at ζ = 0.9, and the κ–RMSE chart">
+    <figcaption><b>Prediction, uncertainty and optimal similarity</b>, the chart shown first after a run: a, the prediction of Zn over the grid in mg/kg; b, the uncertainty at ζ = 0.9; c, the κ–RMSE chart.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> Panel a maps the prediction in the unit of y. Panel b maps the uncertainty at the chosen ζ; its colours end at the 99th percentile, so that a few extreme cells do not flatten the rest. Both show only the cells inside the boundary. The numbers are fields on a copy of the grid:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Content</th></tr>
+    <tr><td><code>gos_pred</code></td><td>The prediction on the modelling scale. With the log transform on it is the log of the input (here about 2.4 to 4.3), not mg/kg.</td></tr>
+    <tr><td><code>gos_pred_original_scale</code></td><td>exp of the log prediction, in mg/kg. This is the field of panel a.</td></tr>
+    <tr><td><code>uncertainty90</code> … <code>uncertainty100</code></td><td>1 − the ζ-quantile of the retained similarities, for ζ = 0.9, 0.95, 0.99, 0.995, 0.999 and 1. All six are always written.</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> In the example the predicted zinc is highest in a band through the centre of the district and towards its south-east, with values up to about 70 mg/kg, and lowest in the south-west and north-west, near 20 mg/kg and below. Most of the uncertainty map is pale, below 0.1; darker patches, in the south-west corner and at several places along the edges, are locations whose covariates few samples resemble. Read the two maps together: a high or low prediction in a dark patch rests on little evidence. <span class="ui">Uncertainty quantile ζ</span> only names the field that panel b shows and the <b>Run summary</b> table lists; it changes no value. A smaller ζ gives a higher uncertainty.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Soil Zn was predicted on the 1 km grid with GOS (Song 2022) from seven covariates, after a log transform and the removal of outliers beyond 2.5 standard deviations (9 samples). Predictions were back-transformed to mg/kg (Figure Xa); the uncertainty (ζ = 0.9) is below 0.1 over most of the area and higher where few samples have a similar configuration of covariates (Figure Xb)."</p></div>
+
+  <h3>3.4 Exporting</h3>
+  <p>Export the figure from the <span class="ui">Chart</span> page as PDF or SVG (vector) or PNG at 300 dpi; <span class="ui">Data CSV</span> saves the numbers behind it. With known units the maps have no axes and carry one north arrow and scale bar; <span class="ui">Map units</span> (Advanced) sets the units when the layer has no coordinate system. <span class="ui">Export results</span> in the panel writes a report of the run with the method, the steps, the figures and the tables (<a href="../guide.html#export">Part 1</a>).</p>
+
+  <h3>3.5 Reading the results together</h3>
+  <p>The outputs tell one story: <b>how many</b> similar samples to use (the optimal similarity), whether this choice <b>predicts better</b> than using all samples or a regression (the accuracy), <b>what</b> is predicted (the prediction map) and <b>where</b> the samples do not represent the area (the uncertainty map). Read them in this order:</p>
+  <ol>
+    <li><b>Optimal similarity</b>: whether the curve has a minimum below κ = 1, and how deep it is. A curve that falls all the way to κ = 1 means that no threshold helps and that BCS is the right model for your data.</li>
+    <li><b>Accuracy</b>: whether GOS is ahead of BCS and of the linear regression, and by how much.</li>
+    <li><b>Prediction</b>: where y is high and low.</li>
+    <li><b>Uncertainty</b>: where the model extrapolates, and whether these are the places with few samples.</li>
+  </ol>
+  <p class="note"><span class="label">What GOS is not</span>It is not a method based on distance: it never reads the coordinates, so it cannot use a spatial pattern that no covariate carries. It is not a regression: it gives no coefficients. And its uncertainty is not an error bar: it says how similar the best samples are to a location, not how wrong the prediction may be.</p>
+
+  <h3>3.6 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>The similarity function and the minimum over the covariates; κ and ζ; how λ was searched: the candidate κ, the number of repeats, the training share; the transform of y and the removal of outliers</td><td>The settings of the run (in the exported report); table <b>Run summary</b></td></tr>
+    <tr><td>Results</td><td>Follow the order of the analysis: the κ–RMSE curve and λ, with the number of samples that λ keeps; the accuracy against BCS and the regression; the prediction map; the uncertainty at a named ζ</td><td>Figures <b>Optimal similarity (κ–RMSE)</b> and <b>Prediction, uncertainty and optimal similarity</b>; tables <b>κ and cross-validation RMSE</b> and <b>Accuracy: GOS, BCS and linear regression</b></td></tr>
+    <tr><td>Discussion</td><td>Why a small share of similar samples predicts better than all of them; what a model without coordinates cannot show; where to sample next</td><td>The uncertainty fields <code>uncertainty90</code> to <code>uncertainty100</code>; table <b>RMSE per κ and repeat</b></td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>κ is a share, so read λ together with the number of samples it keeps (λ × the number of samples). With few samples a small κ leaves too few of them for a stable prediction.</li>
+      <li>More covariates are not better. The similarity is a minimum, so each added covariate can only lower it, and a weak covariate hides good matches.</li>
+      <li>Report λ with the candidate κ and the number of repeats, and every uncertainty with its ζ. Without them a reader cannot check the values.</li>
+      <li>A circular covariate such as aspect in degrees does not fit: 359° and 1° count as far apart. Use its sine and cosine, or leave it out.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings. What is λ, and what is its cross-validation RMSE? Which of the three models in the accuracy table has the largest MAE?</p>
+    <details><summary>Answer</summary>
+      <p>λ = 0.08, with a mean RMSE of 0.664. The multiple linear regression has the largest MAE (0.554), against 0.525 for BCS and 0.516 for GOS.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Explore</span></h4>
+    <p>Open the table <b>κ and cross-validation RMSE</b>. If 0.08 had not been among the candidates, which κ would have the lowest RMSE in this table? What does that tell you about how to choose the candidates?</p>
+    <details><summary>Answer</summary>
+      <p>κ = 0.2, with 0.6667, just below 0.05 with 0.6671. λ can only be one of the values you offer, so the candidates should be dense where the curve turns. Here the values around the minimum differ in the third decimal: the result is not sensitive to the exact κ between 0.05 and 0.2.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague maps the field <code>gos_pred</code> and writes: "Predicted soil zinc ranges from 2.4 to 4.3 mg/kg, with a prediction error (RMSE) of 0.66 mg/kg." What is wrong?</p>
+    <details><summary>Answer</summary>
+      <p>Both numbers are on the log scale, because the response was log-transformed. <code>gos_pred</code> is the log of Zn; the prediction in mg/kg is <code>gos_pred_original_scale</code>, which is the field mapped in panel a (roughly 10 to 75 mg/kg). The RMSE of 0.66 is an error of log(Zn) and has to be reported as such.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Run GOS on your own samples and grid with at least three covariates. Write three sentences for a results section: one on λ and the candidates you compared, one on the accuracy of GOS against BCS and the linear regression, and one on where the prediction is high and where the uncertainty is high. Export the figure as PDF.</p>
+    <details><summary>Checklist</summary>
+      <p>Is λ inside the range of your candidates, not at its first or last value? Did you say on which scale MAE and RMSE are given? Did you give the size of the error reduction, not only its direction? Does the grid have every covariate under the same field name, and did you check how many grid rows were skipped for missing values?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Song, Y. (2022). Geographically optimal similarity. <i>Mathematical Geosciences</i> 55: 295–320. <a href="https://doi.org/10.1007/s11004-022-10036-8">doi:10.1007/s11004-022-10036-8</a></li>
+    <li>Zhu, A.-X., Liu, J., Du, F. et al. (2015). Predictive soil mapping with limited sample data. <i>European Journal of Soil Science</i> 66(3): 535–547. <a href="https://doi.org/10.1111/ejss.12244">doi:10.1111/ejss.12244</a></li>
+    <li>R package geosimilarity: <a href="https://cran.r-project.org/package=geosimilarity">cran.r-project.org/package=geosimilarity</a>. Heterra's results match geosimilarity 3.9.</li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

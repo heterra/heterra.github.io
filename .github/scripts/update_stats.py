@@ -53,11 +53,18 @@ def country_count(rows):
     return sum(1 for name, users in rows if users > 0 and name != "(not set)")
 
 
+def by_country(rows):
+    """{ISO 3166-1 alpha-2 code: sessions} for the map: sessions, as in the daily counts, so the map and the total
+    count the same thing. A visit whose country is unknown has no two-letter code and is left out."""
+    return {code: n for code, n in sorted(rows) if n > 0 and len(code) == 2 and code.isalpha() and code.isupper()}
+
+
 def main():
     client = BetaAnalyticsDataClient.from_service_account_info(json.loads(os.environ["GA_SERVICE_ACCOUNT_JSON"]))
     prop = os.environ["GA_PROPERTY_ID"].strip()
     sessions = report(client, prop, "date", "sessions")
     countries = report(client, prop, "country", "totalUsers")
+    places = by_country(report(client, prop, "countryId", "sessions"))
     # no data means something is wrong with the query or the access; keep the numbers already published
     if not any(n > 0 for _, n in sessions) or country_count(countries) == 0:
         sys.exit("Analytics returned no users or no countries; stats.json is unchanged")
@@ -66,10 +73,11 @@ def main():
         "updated": datetime.datetime.now(datetime.timezone.utc).date().isoformat(),
         "countries": country_count(countries),
         "daily": days,
+        "byCountry": places,
     }
     STATS.write_text(json.dumps(stats, indent=1) + "\n", encoding="utf-8")
     by_country = sum(users for _, users in countries)
-    print(f"{sum(d['count'] for d in days)} users, {stats['countries']} countries, {len(days)} days (total users summed by country: {by_country})")
+    print(f"{sum(d['count'] for d in days)} users, {stats['countries']} countries, {len(days)} days, {len(places)} places on the map (total users summed by country: {by_country})")
 
 
 if __name__ == "__main__":

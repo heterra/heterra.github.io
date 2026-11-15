@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSI · Heterra guide</title>
+<meta name="description" content="How to measure the degree of spatial interpretability (DSI) of prediction models in Heterra from their out-of-sample residuals, read its figures and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="dsi" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb evaluation">Part 5 · Model evaluation · Chapter 8</p>
+  <h1>DSI</h1>
+  <p class="sub">Degree of spatial interpretability</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>How much of the spatial structure of my variable has each model absorbed, and how much is still left in its residuals?</div>
+    <div><h4>You need</h4>One point table with longitude and latitude, the observed y, and one field of out-of-sample residuals (or predictions) per model. At least 30 complete rows.</div>
+    <div><h4>You get</h4>For every model, the share of spatial autocorrelation and of spatial heterogeneity it explains (η), the DSI range θ₁ to θ₃, and R², RMSE and MAE next to them. Since version 1.6.0 also maps of a local DSI.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>R², RMSE and MAE say how close a model's predictions are to the observed values. They do not say whether the model has captured the spatial structure of the variable. A model can be accurate on average and still leave residuals that are clustered on the map, or that differ from one kind of place to another. DSI looks at exactly that: it measures a spatial characteristic in the observed y, measures it again in the model's residuals, and reports the share that is gone.</p>
+  <p>Two characteristics are measured, each with an indicator δ:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Characteristic</th><th>Indicator δ</th><th>How it is computed</th></tr>
+    <tr><td>Spatial autocorrelation (a)</td><td>Moran's I</td><td>With row-standardised weights of the k nearest neighbours of each point</td></tr>
+    <tr><td>Spatial heterogeneity (h)</td><td>The q statistic of the geographical detector</td><td>Over strata that are the leaves of a regression tree of y on the predictors</td></tr>
+  </table></div>
+  <p class="note">η = (δ₀ − δ<sub>r</sub>) / δ₀<br>δ₀ is the indicator of the observed y and δ<sub>r</sub> the indicator of the model's residuals. η is computed for autocorrelation (η<sup>a</sup>) and for heterogeneity (η<sup>h</sup>).<br>θ₁ = min(η<sup>a</sup>, η<sup>h</sup>), θ₂ = max(η<sup>a</sup>, η<sup>h</sup>), θ₃ = 1 − (1 − η<sup>a</sup>)(1 − η<sup>h</sup>)</p>
+  <p>η near 1 means that the residuals keep almost none of that structure. η near 0 means that the model absorbed none of it. A negative η means that the residuals carry more of the structure than the data did. The three θ values combine the two η into a range: θ₁ is the lower end, θ₃ the upper end, and θ₂ lies between them. In the tables they are the columns <code>theta_min</code>, <code>theta_probable</code> and <code>theta_max</code>.</p>
+
+  <figure class="paper-fig">
+    <img src="img/dsi/paper-flowchart.webp" width="1200" height="1092" style="width: 600px" loading="lazy" alt="Flow chart of DSI: spatial data and a model, then step 1, eta from the indicator of the dependent variable and of the residuals, and step 2, the theta range">
+    <figcaption><b>How the method works.</b> A spatial characteristic is measured on the dependent variable (δ₀) and on the residuals of the model (δ<sub>r</sub>). Step 1 turns each pair into η, here for autocorrelation and for heterogeneity. Step 2 combines the η values into the range from θ<sub>min</sub> to θ<sub>max</sub>, which this chapter writes θ₁ to θ₃. Source: Liu et al. (2026), Fig. 1.</figcaption>
+  </figure>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You have fitted one or more prediction models elsewhere (machine learning, regression, any method) and want to compare them on spatial structure as well as on accuracy.</li>
+    <li>You want to know which kind of structure a model misses: clustering of similar values (autocorrelation) or differences between kinds of places (heterogeneity).</li>
+    <li>You need a number for a paper that says how much spatial pattern is left in the residuals.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Plant diversity</td><td>Species richness</td><td>0.5° grid cell</td><td>Liu et al. (2026)</td></tr>
+    <tr><td>Forest biomass</td><td>Above-ground biomass of trees</td><td>Sample plot</td><td>Liu, Song, Yi &amp; Zhang (2026), with DG, the local form of DSI, which is outside Heterra</td></tr>
+  </table></div>
+  <p>Any set of points with coordinates, one numeric response and the held-out residuals of one or more models fits.</p>
+
+  <figure class="paper-fig">
+    <img src="img/dsi/paper-feature.webp" width="1400" height="1077" style="width: 620px" loading="lazy" alt="Triangles of the theta range of five models">
+    <figcaption><b>A published result.</b> The θ range of five models. Each triangle runs from θ<sub>1</sub> to θ<sub>3</sub>, with its top at θ<sub>2</sub>; the model with the highest range is in the first row. Drawn with R from the demonstration data of the author's tutorial, in the form of Liu et al. (2026), Fig. 6.</figcaption>
+  </figure>
+
+  <p class="warn"><span class="label">Keep in mind</span>DSI describes the residuals you give it. It does not fit, tune or validate a model, and a high θ does not make a model accurate: accuracy and spatial interpretability can rank models differently, so report both.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>Heterra does not fit the models. You build them in your own software and bring one table of results. To make that table:</p>
+  <ol>
+    <li>Hold out data the model does not see: a test set, or the folds of a cross-validation.</li>
+    <li>Fit each model on the rest and predict the held-out points.</li>
+    <li>For every held-out point write one row: its longitude and latitude, the observed y, and for each model the residual (observed − predicted). You can store the predictions instead; Heterra then computes y − prediction.</li>
+    <li>Add the predictors if you want the strata of q to come from a regression tree, as in the paper.</li>
+  </ol>
+  <p>Save the table as CSV, shapefile, GeoPackage or GeoJSON (<a href="../guide.html#data">Part 1</a> shows how to add data). Since version 1.6.0 the layer may also be polygons or a regular grid; the location of each row is still the pair of coordinate fields you choose (for a layer with geometry, <span class="ui">Geometry X</span> and <span class="ui">Geometry Y</span> are offered too).</p>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Type</th><th>In the example</th></tr>
+    <tr><td>Longitude, latitude</td><td>Numbers, WGS84 degrees</td><td><code>lon</code>, <code>lat</code></td></tr>
+    <tr><td>Dependent variable (observed y)</td><td>Number</td><td><code>y</code></td></tr>
+    <tr><td>Model fields, one per model</td><td>Numbers: residuals or predictions</td><td><code>error_rpart</code>, <code>error_rf</code>, <code>error_xgbTree</code>, <code>error_cubist</code>, <code>error_knn</code></td></tr>
+    <tr><td>Predictors (optional)</td><td>Numbers</td><td><code>temperature</code>, <code>precipitation</code>, <code>elevation</code>, <code>soil_ph</code>, <code>distance_km</code>, <code>noise_var</code></td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>dsi_boundary</code>: the outline drawn on the map and on the maps of the local DSI. It changes no result.</td></tr>
+  </table></div>
+  <p>A prefix <code>error_</code> or <code>residual_</code> (for predictions <code>pred_</code>, <code>prediction_</code> or <code>predicted_</code>) is dropped from the model name, so <code>error_rf</code> appears as rf. The sign of the residuals does not affect DSI. The example has 310 simulated test points in an irregular study area across Australia, so its numbers illustrate the tool and do not describe a real study.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Model evaluation → DSI</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The test points and the study-area boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/dsi/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the 310 test points inside the study-area boundary and the DSI panel at step 1">
+    <figcaption>After <b>Load Example</b>: the layers on the left, the test points on the map, the DSI panel on the right at step 1 of 4.</figcaption>
+  </figure>
+  <p>The panel has four steps. <span class="ui">Next</span> moves on; <span class="ui">Run</span> appears at the last step, because only that step computes.</p>
+  <ol class="steps four">
+    <li><img src="img/dsi/panel-pre1.webp" loading="lazy" alt="DSI panel, step 1 Data"><b>Data</b>Choose the layer, <span class="ui">Longitude</span> <code>lon</code>, <span class="ui">Latitude</span> <code>lat</code> and the <span class="ui">Dependent variable (observed y)</span> <code>y</code>. The <span class="ui">Study-area boundary (for the maps)</span> is optional.</li>
+    <li><img src="img/dsi/panel-pre2.webp" loading="lazy" alt="DSI panel, step 2 Models"><b>Models</b>Keep <span class="ui">Residuals (observed − predicted)</span> and tick the five <code>error_</code> fields under <span class="ui">Model residual fields</span>.</li>
+    <li><img src="img/dsi/panel-pre3.webp" loading="lazy" alt="DSI panel, step 3 Strata"><b>Strata</b>Tick the six predictors. They give the strata of q: the leaves of a regression tree of y on them.</li>
+    <li><img src="img/dsi/panel-pre4.webp" loading="lazy" alt="DSI panel, step 4 Neighbours"><b>Neighbours</b>Keep k = 8 and <span class="ui">Projected EPSG:3577</span>, the paper's Australian setting, and 50 for <span class="ui">Local window: nearest points</span>. Click <span class="ui">Run</span>.</li>
+  </ol>
+  <p>The run takes well under a second. The <span class="ui">Chart</span> page opens with the θ range figure, and the panel lists every result under <span class="ui">Outputs</span>: the tables, the strata field, the figures, and since version 1.6.0 the local DSI fields and their two figures of maps. A green line says that the results match the reference results computed with R.</p>
+  <figure class="shot">
+    <img src="img/dsi/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the DSI run: the theta range figure on the Chart page and the results in the panel">
+    <figcaption>After <b>Run</b>: the θ range figure. The menu above the figure and the Outputs list in the panel open the other figures and the tables.</figcaption>
+  </figure>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add your table (<span class="ui">Add Data</span>), open DSI from the Toolbox and choose the layer, the coordinates and y in step 1.</li>
+    <li>In step 2 say whether the model fields hold residuals or predictions, and tick one field per model.</li>
+    <li>In step 3 tick the predictors the models used. In step 4 choose <span class="ui">Great-circle, WGS-84 (any region)</span> unless your study area is in Australia.</li>
+  </ol>
+  <ul>
+    <li>Residuals should come from data the model did not see (a test set or cross-validation).</li>
+    <li>Coordinates must be WGS84 degrees. Great-circle distances work anywhere; EPSG:3577 is for Australia only.</li>
+    <li>Without predictors, q uses k-means strata of the coordinates. Their number is set by <span class="ui">Strata for the k-means fallback (q)</span> and is at most a tenth of the number of rows.</li>
+    <li>Rows with a missing value in any selected field are dropped; the log says how many. At least 30 complete rows are needed.</li>
+    <li>The local maps use windows of the nearest 50 points by default (<span class="ui">Local window: nearest points</span>, at least 10). To use a distance instead, type it in <span class="ui">Local window: distance κ (km, optional)</span>: a window is then all points within that distance, and a window with fewer points than the number above takes the nearest points instead. These two settings change only the local fields and maps, never the tables.</li>
+    <li>Column names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the δ and η table first (what structure is in the data, and what is left in the residuals?), then the θ range (how do the models compare?), then DSI against accuracy (do the two rankings agree?), then the strata and the diagnostics (can the numbers be trusted?), and last the local maps (where on the map?).</p>
+
+  <h3>3.1 Autocorrelation and heterogeneity explained (δ, η)</h3>
+  <p>The table <b>Spatial autocorrelation and heterogeneity explained (δ, η)</b> has one row per model. In the example the observed y has Moran's I δ₀<sup>a</sup> = 0.652 and q δ₀<sup>h</sup> = 0.453; these two values are the same in every row.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Model</th><th class="n">Moran's I of residuals</th><th class="n">η<sup>a</sup></th><th class="n">q of residuals</th><th class="n">η<sup>h</sup></th></tr>
+    <tr><td>xgbTree</td><td class="n">0.431</td><td class="n">0.339</td><td class="n">0.181</td><td class="n">0.601</td></tr>
+    <tr><td>rpart</td><td class="n">0.524</td><td class="n">0.196</td><td class="n">0.262</td><td class="n">0.423</td></tr>
+    <tr><td>knn</td><td class="n">0.544</td><td class="n">0.165</td><td class="n">0.257</td><td class="n">0.433</td></tr>
+    <tr><td>rf</td><td class="n">0.568</td><td class="n">0.129</td><td class="n">0.252</td><td class="n">0.445</td></tr>
+    <tr><td>cubist</td><td class="n">0.588</td><td class="n">0.098</td><td class="n">0.264</td><td class="n">0.416</td></tr>
+  </table></div>
+  <p><b>What it shows.</b> For each characteristic, the indicator of the data, the indicator of the residuals and the share η that the model explains. The table <b>DSI results (Table 3)</b> holds the same values with the p values of Moran's I and θ₁ to θ₃ added, in the layout of the paper's Table 3.</p>
+  <p><b>How to read it.</b> Compare each residual value with the value of the data. The residuals of xgbTree have a Moran's I of 0.431 against 0.652 in y, so the model explains 34% of the autocorrelation (η<sup>a</sup> = 0.339); the residuals of cubist still have 0.588, so it explains 10%. Then compare the two η columns: here every model removes more heterogeneity than autocorrelation.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The response is spatially autocorrelated (Moran's I = 0.65, k = 8 nearest neighbours) and heterogeneous (q = 0.45 over regression-tree strata). The residuals of xgbTree retain a Moran's I of 0.43 and a q of 0.18: the model explains 34% of the spatial autocorrelation and 60% of the spatial heterogeneity (Liu et al. 2026)."</p></div>
+
+  <h3>3.2 θ range by model</h3>
+  <figure class="chart">
+    <img src="img/dsi/fig-theta.webp" style="width: 595px" loading="lazy" alt="Theta range by model: one triangle per model from theta 1 to theta 3 with the apex at theta 2, xgbTree at the top">
+    <figcaption><b>θ range by model</b>: one triangle per model. The base runs from θ₁ to θ₃, the dashed apex is at θ₂. Models are ordered by θ₃.</figcaption>
+  </figure>
+  <div class="table-wrap"><table>
+    <tr><th>Model</th><th class="n">θ₁</th><th class="n">θ₂</th><th class="n">θ₃</th></tr>
+    <tr><td>xgbTree</td><td class="n">0.339</td><td class="n">0.601</td><td class="n">0.736</td></tr>
+    <tr><td>rpart</td><td class="n">0.196</td><td class="n">0.423</td><td class="n">0.536</td></tr>
+    <tr><td>knn</td><td class="n">0.165</td><td class="n">0.433</td><td class="n">0.527</td></tr>
+    <tr><td>rf</td><td class="n">0.129</td><td class="n">0.445</td><td class="n">0.516</td></tr>
+    <tr><td>cubist</td><td class="n">0.098</td><td class="n">0.416</td><td class="n">0.474</td></tr>
+  </table></div>
+  <p><b>What it shows.</b> The DSI of each model as a range. θ₁ is the smaller of the two η and θ₂ the larger; θ₃ combines both.</p>
+  <p><b>How to read it.</b> A triangle further to the right is a model whose residuals keep less spatial structure. xgbTree absorbs the most (θ₃ = 0.736) and its whole triangle lies to the right of the others. The other four models overlap: their θ₃ values lie between 0.474 and 0.536, and their order by θ₂ is not the order by θ₃. A wide triangle means that the model treats the two characteristics very differently, so look at η<sup>a</sup> and η<sup>h</sup> in the table before you summarise the model with one number.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The degree of spatial interpretability is highest for xgbTree (θ₁ = 0.34, θ₂ = 0.60, θ₃ = 0.74). The other four models are close to each other (θ₃ from 0.47 to 0.54), and all five explain more spatial heterogeneity than spatial autocorrelation."</p></div>
+
+  <h3>3.3 DSI and accuracy metrics</h3>
+  <figure class="chart">
+    <img src="img/dsi/fig-comparison.webp" style="width: 808px" loading="lazy" alt="Three panels: DSI against R squared, RMSE and MAE, one point per model with a bar from theta 1 to theta 3">
+    <figcaption><b>DSI and accuracy metrics</b>: a, R²; b, RMSE; c, MAE. Each point is a model at θ₂; the bar runs from θ₁ to θ₃.</figcaption>
+  </figure>
+  <div class="table-wrap"><table>
+    <tr><th>Model</th><th class="n">R²</th><th class="n">RMSE</th><th class="n">MAE</th><th class="n">θ₃</th></tr>
+    <tr><td>xgbTree</td><td class="n">0.274</td><td class="n">4.019</td><td class="n">3.236</td><td class="n">0.736</td></tr>
+    <tr><td>rpart</td><td class="n">0.147</td><td class="n">4.358</td><td class="n">3.524</td><td class="n">0.536</td></tr>
+    <tr><td>knn</td><td class="n">0.303</td><td class="n">3.939</td><td class="n">3.191</td><td class="n">0.527</td></tr>
+    <tr><td>rf</td><td class="n">0.365</td><td class="n">3.759</td><td class="n">3.029</td><td class="n">0.516</td></tr>
+    <tr><td>cubist</td><td class="n">0.291</td><td class="n">3.971</td><td class="n">3.199</td><td class="n">0.474</td></tr>
+  </table></div>
+  <p><b>What it shows.</b> The accuracy of each model, computed from the same residuals, against its DSI. R² is 1 − SSE/SST, not the squared correlation.</p>
+  <p><b>How to read it.</b> If accuracy and spatial interpretability agreed, the points would rise from left to right in panel a and fall in panels b and c. Here they do not: rf has the best R², RMSE and MAE but only the fourth-highest θ₃, and xgbTree has the highest θ₃ with the fourth-highest R². Accuracy and spatial interpretability rank models differently, so a model chosen on accuracy alone can leave more spatial structure in its residuals than a less accurate one.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Accuracy and spatial interpretability rank the models differently. Random forest is the most accurate model (R² = 0.36, RMSE = 3.76, MAE = 3.03) but has only the fourth-highest DSI (θ₃ = 0.52), whereas xgbTree has a lower R² (0.27) and the highest DSI (θ₃ = 0.74)."</p></div>
+
+  <h3>3.4 Strata and diagnostics</h3>
+  <figure class="shot">
+    <img src="img/dsi/win-map.webp" width="1800" height="1152" loading="lazy" alt="Map of the test points coloured by the field dsi_stratum, with a legend of eight strata">
+    <figcaption>The <b>Map</b> page after the run: each test point in the colour of its stratum, with the legend of <code>dsi_stratum</code>.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The run adds a copy of the layer with the field <code>dsi_stratum</code>: the stratum of each row that q was computed on. The map colours the points by stratum. The example has 8 strata, the leaves of the regression tree; the labels in the legend are the tree's leaf numbers, not ranks.</p>
+  <p><b>How to read it.</b> q depends on the strata, so check that they are sensible: several strata, none with only a handful of points. An RColorBrewer palette has at most 12 colours, so with more strata the colours repeat in order, and the legend says so. The table <b>Diagnostics</b> flags a response without significant autocorrelation (η<sup>a</sup> then has little meaning), negative η and wide θ ranges. <b>Settings used</b> records the number of rows, k, the distance and the kind of strata.</p>
+  <h3>3.5 Local DSI (new in version 1.6.0)</h3>
+  <p>The tables give one value per model for the whole study area. The local view repeats the computation around every location. The window of a location is its 50 nearest points, itself among them. Inside the window Moran's I and q are computed again, for y and for the residuals of each model, and give a local η<sup>a</sup> and a local η<sup>h</sup> by the same formula, (δ₀ − δ<sub>r</sub>) / δ₀. The local DSI is the larger of the two, as θ₂ is.</p>
+  <p>A share is given only where the window has a pattern to explain. The local η<sup>a</sup> needs a Moran's I of y in the window that is positive and significant (one-sided p &lt; 0.05); the local η<sup>h</sup> needs a q of y in the window above 0.05. Elsewhere the value is missing, and the point is grey on the maps. In the example 110 of the 1550 local values (310 locations × 5 models) are missing; the local η<sup>a</sup> exists at 223 locations, the local η<sup>h</sup> at 280, and the local DSI at 288.</p>
+  <figure class="chart">
+    <img src="img/dsi/fig-localmaps.webp" style="width: 808px" loading="lazy" alt="Five maps of the study area, one per model, the test points coloured by local DSI from 0 (blue) to 1 (red), grey where there is no value">
+    <figcaption><b>Maps of the local DSI</b>: one map per model on one colour scale from 0 (blue) to 1 (red). Grey: nothing to explain in that window.</figcaption>
+  </figure>
+  <div class="table-wrap"><table>
+    <tr><th>Model</th><th class="n">Median local DSI</th><th class="n">Median local η<sup>a</sup></th><th class="n">Median local η<sup>h</sup></th><th class="n">Global θ₂</th></tr>
+    <tr><td>xgbTree</td><td class="n">0.731</td><td class="n">0.723</td><td class="n">0.678</td><td class="n">0.601</td></tr>
+    <tr><td>knn</td><td class="n">0.551</td><td class="n">0.398</td><td class="n">0.510</td><td class="n">0.433</td></tr>
+    <tr><td>rf</td><td class="n">0.515</td><td class="n">0.352</td><td class="n">0.504</td><td class="n">0.445</td></tr>
+    <tr><td>cubist</td><td class="n">0.491</td><td class="n">0.297</td><td class="n">0.442</td><td class="n">0.416</td></tr>
+    <tr><td>rpart</td><td class="n">0.459</td><td class="n">0.423</td><td class="n">0.396</td><td class="n">0.423</td></tr>
+  </table></div>
+  <p><b>What it shows.</b> Where each model explains the spatial structure of y and where it does not. The run adds a copy of the layer with the fields <code>dsi_local_&lt;model&gt;</code>, <code>eta_a_local_&lt;model&gt;</code>, <code>eta_h_local_&lt;model&gt;</code> and <code>dsi_window_n</code>, the number of points in the window, so you can also style them on the <span class="ui">Map</span> page. The medians in the table above were computed from these fields.</p>
+  <p><b>How to read it.</b> Compare the same place across the five maps. xgbTree is orange to red over most of the area, which agrees with its global θ. In the south-east of the centre several models are blue: there the residuals keep nearly all of the local structure of y. Neighbouring windows share most of their points, so the maps are smooth by construction, and the local values do not average to the global ones: a window can have a pattern that the whole area does not, and the reverse. A local value is a ratio of two numbers from 50 points and can leave the range 0 to 1 (in the example from −1.30 to 1.66); the colour scale stops at 0 and 1.</p>
+  <figure class="chart">
+    <img src="img/dsi/fig-localbivariate.webp" style="width: 808px" loading="lazy" alt="Five maps, one per model, the points in nine colours for three classes of the local autocorrelation explained crossed with three classes of the local heterogeneity explained, and a key of three by three colour squares">
+    <figcaption><b>Maps of the two local explained shares</b>: one map per model and the key. Blue grows with the autocorrelation explained, red with the heterogeneity explained; dark means both are high.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The two local shares together. Each is cut into three classes at its terciles over all models (here 0.291 and 0.542 for the autocorrelation explained, 0.414 and 0.593 for the heterogeneity explained; the key's axes give these limits), and the nine combinations get nine colours.</p>
+  <p><b>How to read it.</b> Dark points are places where a model explains both characteristics well; pale points are places where it explains neither. Blue points explain autocorrelation but little heterogeneity, red points the reverse. xgbTree is dark over most of the area. For the other models the west is mostly pale to blue and parts of the east are red: the same model explains a different characteristic in different parts of the area. Because the classes are shared by all models, colours can be compared between maps.</p>
+  <p class="note"><span class="label">How far to trust it</span>The local DSI is an addition of Heterra 1.6.0. It is not defined in Liu et al. (2026, IJGIS), there is no R reference for it, and its numbers are therefore not checked against R as the tables are. Use it to explore where the models differ, and report the window (50 nearest points, or your distance) with every local number. Several hundred windows tested at 0.05 give some false positives.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"A local DSI was computed in windows of the 50 nearest test points (Heterra 1.6.0), where the window showed significant positive autocorrelation of y (p &lt; 0.05) or a q of y above 0.05. Its median is highest for xgbTree (0.73) and lies between 0.46 and 0.55 for the other models; all models have low values in the south-east of the centre of the study area (Figure X)."</p></div>
+  <p>Export a figure from the <span class="ui">Chart</span> page as PDF or SVG (vector) or PNG at 300 dpi; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run with the method, the steps, the figures and the tables (<a href="../guide.html#export">Part 1</a>). The report does not yet include the local values.</p>
+
+  <h3>3.6 Reading the results together</h3>
+  <p>The outputs tell one story in three parts: <b>what structure</b> the data have (δ₀), <b>how much</b> of it each model explains (η and θ), and <b>whether</b> the most accurate model is also the one that explains the most structure. The last part is the main finding of a DSI analysis. Read them in this order:</p>
+  <ol>
+    <li><b>Autocorrelation and heterogeneity explained (δ, η)</b>: the structure in y first, then what is left in the residuals of each model.</li>
+    <li><b>θ range by model</b>: the ranking of the models, and how wide each range is.</li>
+    <li><b>DSI and accuracy metrics</b>: the models on which the two rankings disagree.</li>
+    <li><b>Strata and diagnostics</b>: what you must state as a limit before you write: a response without significant autocorrelation, a negative η, a wide θ range, strata with few points.</li>
+    <li><b>Local DSI</b>: where on the map the models explain the structure, as an exploration after the global results.</li>
+  </ol>
+  <p class="note"><span class="label">What DSI is not</span>It does not replace accuracy. The two often agree in part, and DSI finds the models on which they disagree. Choose a model by reading both. The DSI of the tables is one value for the whole study area; the local maps of section 3.5 show where a model explains the structure, with the limits named there.</p>
+
+  <h3>3.7 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>The two spatial characteristics and their indicators; η and the θ range; the list of models and how the residuals were held out; k, the distance and how the strata were made</td><td>Table <b>Settings used</b>; the settings of the run (in the exported report)</td></tr>
+    <tr><td>Results</td><td>Follow the order accuracy, DSI, disagreement. Give δ₀ before any η. Every finding has a number. State the limits that the diagnostics flag</td><td>Tables <b>Spatial autocorrelation and heterogeneity explained (δ, η)</b> and <b>DSI results (Table 3)</b>; figures <b>θ range by model</b> and <b>DSI and accuracy metrics</b>; table <b>Diagnostics</b></td></tr>
+    <tr><td>Discussion</td><td>Why accuracy and spatial interpretability disagree: a model can lower its errors by smoothing towards the local mean, and still leave the spatial arrangement of the errors as it was. Whether the ranking holds with another k and other strata</td><td>Figure <b>DSI and accuracy metrics</b>; a second run with another k or with k-means strata (both runs stay in <span class="ui">History</span>)</td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>Use held-out residuals. The training residuals of an overfitted model give a false η near 1.</li>
+      <li>The strata of q come from the predictors, never from y. Strata cut from y push its own q towards 1, and η then has no meaning.</li>
+      <li>The strata are not neutral: tree strata and k-means strata can rank the models differently on heterogeneity. Name the rule in the Methods, and report both rankings if they differ.</li>
+      <li>Distances must be right for your region. Outside Australia choose great-circle distances, or the nearest neighbours and Moran's I are wrong.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings. Which model has the largest θ₃, and what are its η for autocorrelation and for heterogeneity? Which model has the smallest θ₁?</p>
+    <details><summary>Answer</summary>
+      <p>xgbTree: θ₃ = 0.736, with η<sup>a</sup> = 0.339 and η<sup>h</sup> = 0.601. cubist has the smallest θ₁ (0.098), which is its η for autocorrelation.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Explore</span></h4>
+    <p>Open the table <span class="ui">Spatial autocorrelation and heterogeneity explained (δ, η)</span> from the Outputs list. Whose residuals keep the most spatial autocorrelation, and how does their Moran's I compare with that of y? Then open the <span class="ui">Map</span> page: how many strata was q computed on?</p>
+    <details><summary>Answer</summary>
+      <p>cubist: its residuals have a Moran's I of 0.588 against 0.652 for y, so almost all of the autocorrelation is still there (η<sup>a</sup> = 0.098). The legend of <code>dsi_stratum</code> lists 8 strata.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague writes: "Random forest has the highest R², so it also explains the spatial structure of y best." Check this against the two figures and the tables. Is the sentence justified?</p>
+    <details><summary>Answer</summary>
+      <p>No. rf has the best R² (0.365), RMSE and MAE, but its θ₃ (0.516) is only the fourth-highest of five. Its residuals keep a Moran's I of 0.568 of the 0.652 in y (η<sup>a</sup> = 0.129). xgbTree, with a lower R² (0.274), has θ₃ = 0.736. Accuracy and spatial interpretability are different properties and have to be reported separately.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Fit at least two models to your own data in the software you normally use, with a test set or cross-validation. Build the table of section 2.1 and run DSI. Write three sentences for a results section: one on the structure in the data (δ₀ of Moran's I and of q), one on what each model explains (η and θ₁ to θ₃), and one comparing the DSI ranking with the accuracy ranking. Export the comparison figure as PDF.</p>
+    <details><summary>Checklist</summary>
+      <p>Do the residuals come from points the models did not see? Are the coordinates WGS84 degrees, and did you choose great-circle distances outside Australia? Did you look at the map of <code>dsi_stratum</code> and at the Diagnostics table? Did you report k, the distance and how the strata were made? Does each sentence give a number?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Liu, H., Song, Y. &amp; Yi, W. (2026). Degree of spatial interpretability. <i>International Journal of Geographical Information Science</i>. <a href="https://doi.org/10.1080/13658816.2026.2614335">doi:10.1080/13658816.2026.2614335</a></li>
+    <li>Liu, H., Song, Y., Yi, W. &amp; Zhang, P. (2026). Degree of geocomplexity for diagnosing spatial pattern loss beyond prediction accuracy. <i>GIScience &amp; Remote Sensing</i> 63(1): 2657087. <a href="https://doi.org/10.1080/15481603.2026.2657087">doi:10.1080/15481603.2026.2657087</a></li>
+    <li>Wang, J.-F. et al. (2010). Geographical detectors-based health risk assessment and its application in the neural tube defects study of the Heshun Region, China. <i>International Journal of Geographical Information Science</i> 24(1): 107–127.</li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>

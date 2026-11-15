@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDO · Heterra guide</title>
+<meta name="description" content="How to run second-dimension outliers (SDO) in Heterra on your own data, read its figures and tables, and report them in a paper.">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body data-page="sdo" data-base="../">
+
+<header class="top guide-top">
+  <div class="wrap">
+    <a class="brand" href="../index.html"><img src="../assets/icon.png" alt="">Heterra</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a class="here" href="../guide.html">Guide</a>
+      <a href="../index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+<aside class="side" aria-label="Contents"><noscript><p><a href="../guide.html">Contents of the guide</a></p></noscript></aside>
+
+<main class="page">
+  <p class="crumb pattern">Part 3 · Spatial pattern · Chapter 5</p>
+  <h1>SDO</h1>
+  <p class="sub">Second-dimension outliers</p>
+
+  <div class="glance">
+    <div><h4>The question</h4>Do local anomalies of the covariates around a sample help to predict my variable, and by how much?</div>
+    <div><h4>You need</h4>Two layers in the same projected coordinate system: samples with a numeric response y, and a grid of cells with the covariates as fields.</div>
+    <div><h4>You get</h4>Positive and negative outlier strengths of each covariate at several radii, the stable ones among them, maps of them, prediction maps with and without them, and a cross-validation of their gain.</div>
+  </div>
+
+  <h2 id="method" data-nav="1 The method"><span class="num">1</span>The method</h2>
+
+  <h3>The idea</h3>
+  <p>Local anomalies around a location can explain what happens there. SDO (Ren, Song and Yu 2026) measures, around every sample and at several radii, how far the grid cells of a covariate stand out from their neighbourhood:</p>
+  <p class="note">z = (value − neighbourhood mean) / neighbourhood SD<br>The neighbourhood is the grid cells closer than the radius b to the sample. The <b>positive strength</b> is the sum of z over the cells with z above +s; the <b>negative strength</b> is the sum of z over the cells with z below −s. s is the outlier threshold, 2 standard deviations in the published model.</p>
+  <p>So each covariate gives two variables per radius, named like <code>V1_p_b20</code> (positive, 20) and <code>V1_n_b20</code> (negative, 20). A positive strength is 0 or above, a negative one 0 or below; 0 means that the neighbourhood holds no outlier of that sign. The example has 6 covariates × 10 radii × 2 signs = 120 variables.</p>
+
+  <figure class="paper-fig">
+    <img src="img/sdo/paper-schematic.webp" width="1400" height="1365" style="width: 560px" loading="lazy" alt="Flow chart of SDO in four steps: buffers of several sizes around a location, local outliers inside each buffer, positive and negative outlier strength indices, and a model of the response on them">
+    <figcaption><b>How the method works.</b> Buffers of several sizes are drawn around each location, and the local outliers of a covariate inside each buffer are found. Their sums give a positive and a negative outlier strength index, and the response is then modelled on the covariates and these indices. In the figure, s counts the outliers; in Heterra, s is the outlier threshold. Source: Ren, Song and Yu (2026), Fig. 1.</figcaption>
+  </figure>
+
+  <h3>The three parts</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Part</th><th>Question</th><th>Result</th></tr>
+    <tr><td>Scales</td><td>How strong are the outliers of each covariate around every sample?</td><td>Two variables per covariate and radius, and a catalogue that says what each one measures</td></tr>
+    <tr><td>Variable selection</td><td>Which of them are ranked highly in a stable way?</td><td>At most one positive and one negative variable per covariate, chosen with the selection of GCF: random forests on resampled spatial blocks</td></tr>
+    <tr><td>Prediction and cross-validation</td><td>What do they change on the map, and do they predict better?</td><td>Maps of the selected variables; maps from a random forest with the raw covariates (the baseline, X) and with the selected variables added (X + SDO); R² of both in spatial and random folds</td></tr>
+  </table></div>
+
+  <h3>When to use it</h3>
+  <ul>
+    <li>You predict a variable at samples from gridded covariates and expect local extremes around a sample to matter, and not only the local level.</li>
+    <li>You want to see where those outliers are: the outlier maps draw every selected variable over the grid.</li>
+    <li>You want an honest answer to "do the new variables help?": the baseline is always shown beside them.</li>
+  </ul>
+  <h3>Where it has been used</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Field</th><th>Response y</th><th>Spatial unit</th><th>Study</th></tr>
+    <tr><td>Crop production</td><td>Annual wheat production</td><td>Local government area</td><td>Ren, Song and Yu (2026)</td></tr>
+    <tr><td>Crop production</td><td>Barley production per km²</td><td>SA2 polygon</td><td>Ren et al. (2026), where the outlier patterns explain spatial heterogeneity</td></tr>
+  </table></div>
+  <p>Both studies use covariates of climate, terrain and land cover. The data that fit are the same as for <a href="sda.html">SDA</a>: a response at locations and a dense grid of covariates around them.</p>
+
+  <p class="warn"><span class="label">Keep in mind</span>A selected variable is stable, and stability is not evidence of prediction. Whether the variables help is the cross-validation's question. In the example the answer is "it cannot be told from noise", and the chapter shows it as it is. R² is always 1 − SSE/SST.</p>
+
+  <h2 id="software" data-nav="2 In Heterra"><span class="num">2</span>In Heterra</h2>
+
+  <h3>2.1 Prepare your data</h3>
+  <p>Two layers in the same projected coordinate system (<a href="../guide.html#data">Part 1</a> shows how to add data). The samples have one row per observation. The grid has cells around the samples, with the covariates as fields.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Layer or field</th><th>Type</th><th>In the example</th></tr>
+    <tr><td>Samples</td><td>Points, polygons or, since version 1.6.0, a table</td><td>300 simulated samples</td></tr>
+    <tr><td>Response y</td><td>Number, in the samples</td><td><code>response</code></td></tr>
+    <tr><td>Grid</td><td>Grid cells, points or polygons</td><td>3,661 cells, 10 km apart</td></tr>
+    <tr><td>Covariates</td><td>Numbers, fields of the grid</td><td><code>V1</code> to <code>V6</code></td></tr>
+    <tr><td>Boundary (optional)</td><td>A polygon layer</td><td><code>sdo_boundary</code>: the outline on the maps in the charts, which show only the cells inside it. It changes no result.</td></tr>
+  </table></div>
+  <p>The covariates may also be fields of the samples, under the same names. A sample without a covariate's field gets the value of the nearest grid cell that has one, and the catalogue says so. The example is simulated: it follows the process of the method's public demo data, in an irregular study area, with known outlier structure. Its coordinates are in km and it has no coordinate system. Its numbers illustrate the tool and do not describe a real study.</p>
+
+  <h3>2.2 Run the example, step by step</h3>
+  <p>Open the tool from the <span class="ui">Toolbox</span> (<span class="ui">Spatial pattern → SDO</span>), click <span class="ui">Tutorial</span>, then <span class="ui">Load Example</span>. The samples, the grid and the boundary appear on the map, and the panel on the right is filled in for you.</p>
+  <figure class="shot">
+    <img src="img/sdo/win-loaded.webp" width="1800" height="1152" loading="lazy" alt="Heterra after Load Example: the covariate grid and the boundary on the map and the SDO panel at step 1">
+    <figcaption>After <b>Load Example</b>: the three layers on the left, the grid on the map, the SDO panel on the right at step 1 of 5.</figcaption>
+  </figure>
+  <p>The panel has five steps, and three of them compute: steps 2, 4 and 5 each have a <span class="ui">Run</span> button, and each run needs the one before it. A tick on a step's number says that it has been run. The pictures show the panel after the runs.</p>
+  <ol class="steps five">
+    <li><img src="img/sdo/panel-post1.webp" loading="lazy" alt="SDO panel, step 1 Covariates"><b>Covariates</b>Choose the <span class="ui">Samples</span>, the <span class="ui">Grid</span> and the covariates <code>V1</code> to <code>V6</code>. Click <span class="ui">Next</span>.</li>
+    <li><img src="img/sdo/panel-post2.webp" loading="lazy" alt="SDO panel, step 2 Scales"><b>Scales</b>Keep the buffers 10, 20, …, 100 km and s = 2. Click <span class="ui">Run</span>: a copy of the samples gets 120 new fields.</li>
+    <li><img src="img/sdo/panel-post3.webp" loading="lazy" alt="SDO panel, step 3 Modelling data"><b>Modelling data</b>That copy, the catalogue of step 2 and y = <code>response</code>. <code>V1</code> to <code>V6</code> are the <span class="ui">Original covariates (X)</span>; all 120 are ticked under <span class="ui">Generated variables</span>.</li>
+    <li><img src="img/sdo/panel-post4.webp" loading="lazy" alt="SDO panel, step 4 Variable selection"><b>Variable selection</b>Block size 100, B = 10 resamples. Click <span class="ui">Run</span>; it cannot be skipped, because step 5 runs after it.</li>
+    <li><img src="img/sdo/panel-post5.webp" loading="lazy" alt="SDO panel, step 5 Prediction and cross-validation"><b>Prediction and cross-validation</b>5 folds, <span class="ui">Spatial blocks</span> and <span class="ui">Random</span>. Click <span class="ui">Run</span> (a few seconds).</li>
+  </ol>
+  <p>After step 2 a warning says that 24 of the 120 variables are zero at every sample: the radii 10 and 20 km hold few cells of this 10 km grid. That is expected here. The tutorial uses B = 10 resamples, 100-tree selection forests and 200-tree random forests to stay quick; the defaults are B = 80, 200 and 500 trees. After the selection the <span class="ui">Chart</span> page shows the selected variables, and after the last run the outlier maps. A green line says that the results match the reference results computed with R.</p>
+  <figure class="shot">
+    <img src="img/sdo/win-result.webp" width="1800" height="1152" loading="lazy" alt="Heterra after the last SDO run: the six outlier maps on the Chart page and the results in the panel">
+    <figcaption>After the last <b>Run</b>: the outlier maps. The menu above the figure opens the other figures; steps 2, 4 and 5 are ticked.</figcaption>
+  </figure>
+  <p class="note"><b>How the block size was chosen.</b> The rule was fixed before looking at the tutorial's results: block side = the largest buffer radius (100 km, 21 blocks). On this data set the spatial result depends strongly on the block size, so the size must not be chosen from the result.</p>
+
+  <h3>2.3 With your own data</h3>
+  <ol>
+    <li>Add the samples and the grid (<span class="ui">Add Data</span>), open SDO from the Toolbox and choose them in step 1. Both must have the same coordinate system; otherwise the run stops. A layer in longitude and latitude is projected to the <span class="ui">Projected CRS for computing</span> that you choose, which then appears in step 1.</li>
+    <li>The buffers are in the unit of the coordinates. The default follows the rule of Ren et al.: 5 to 10 radii, the largest 10 to 20% of the largest distance between samples (here 100 km, 17% of 590 km).</li>
+    <li>Fix the block size by a rule before you run, for example the largest buffer radius, and keep it.</li>
+    <li>Keep the defaults for real analyses: B = 80, 200 selection trees, 500 random-forest trees.</li>
+  </ol>
+  <ul>
+    <li>The response is not offered among the variables, and a variable generated from it is refused: a model given y to predict y says nothing.</li>
+    <li>With fewer than <span class="ui">Minimum cells</span> (default 10) in a neighbourhood, or an SD of 0, both strengths are 0. A grid cell with a missing value is skipped.</li>
+    <li>If a variable is zero at every sample you get a warning: check the unit and that the layers overlap; otherwise the radius holds too few cells or s is too strict.</li>
+    <li>The grid needs every covariate as a field. A cell with a missing value of a model variable is not predicted.</li>
+    <li>For a table without geometry, two fields appear below the layer and must be chosen: <span class="ui">X coordinate (projected)</span> and <span class="ui">Y coordinate (projected)</span>. The values are used as they are, so they must be in the coordinates and the unit of the grid. A step that takes the table made by an earlier step asks for the two fields again.</li>
+    <li>When the grid is a polygon layer, the maps in the charts draw its polygons, coloured by value.</li>
+    <li>Without a coordinate system, set <span class="ui">Map units</span> (under Advanced in step 5) so that the maps get a north arrow and a scale bar, as the tutorial does with Kilometres. It changes only the charts.</li>
+    <li>Column names, category values and file names are best written with English letters, digits and underscores.</li>
+  </ul>
+
+  <h2 id="results" data-nav="3 Reading the results"><span class="num">3</span>Reading the results</h2>
+  <p>Read the results in this order: the selected variables (what was kept, and at which radius?), the outlier maps (where are those outliers?), the prediction maps (what do they change?), then the cross-validation and the folds table (is the change an improvement?), and last the scatter of observed against predicted values.</p>
+
+  <h3>3.1 Selected variables</h3>
+  <figure class="chart">
+    <img src="img/sdo/fig-selectedplot.webp" style="width: 531px" loading="lazy" alt="Selected variables: six bubbles by searching range and covariate, red or blue by the sign of r, solid for positive and hollow for negative outlier variables">
+    <figcaption><b>Selected variables</b>: one bubble per selected variable, at its searching range b and on its covariate's row.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> The variables the selection kept. The area of a bubble is |r|, where r is the correlation between the variable and y over the samples. There are two legends, and they are independent: the colour says only the sign of r; solid or hollow says only a positive or a negative outlier variable. The six raw covariates are always kept and are not drawn.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Variable</th><th>Covariate</th><th>Outlier</th><th class="n">b (km)</th><th class="n">r</th><th class="n">Frequency</th></tr>
+    <tr><td>V4_p_b100</td><td>V4</td><td>positive</td><td class="n">100</td><td class="n">−0.40</td><td class="n">0.8</td></tr>
+    <tr><td>V3_p_b90</td><td>V3</td><td>positive</td><td class="n">90</td><td class="n">0.30</td><td class="n">0.8</td></tr>
+    <tr><td>V5_p_b50</td><td>V5</td><td>positive</td><td class="n">50</td><td class="n">0.22</td><td class="n">0.8</td></tr>
+    <tr><td>V2_p_b40</td><td>V2</td><td>positive</td><td class="n">40</td><td class="n">0.18</td><td class="n">0.6</td></tr>
+    <tr><td>V4_n_b100</td><td>V4</td><td>negative</td><td class="n">100</td><td class="n">−0.17</td><td class="n">0.9</td></tr>
+    <tr><td>V2_n_b90</td><td>V2</td><td>negative</td><td class="n">90</td><td class="n">−0.13</td><td class="n">0.8</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> A covariate's positive variables are one group and its negative ones another, and each group that passes keeps one variable. Six of the twelve groups passed here; V1 and V6 have none. A positive outlier variable can have r &lt; 0: <code>V4_p_b100</code> has the largest |r| and it is negative, so y is lower where the surroundings hold strong high outliers of V4. The frequency (table <b>Selected variables</b>) is the share of the resamples in which the variable was among the 20 most important generated variables. Neighbouring radii score almost alike (<code>V3_p_b100</code> also has 0.8), so read a radius as "about 90 to 100" and not as an exact scale.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Positive and negative outlier strengths (threshold s = 2) of six covariates were computed within 10 to 100 km of each sample (Ren et al. 2026), 120 variables in total. The stability selection kept six, four positive and two negative, from V2, V3, V4 and V5 (Table X); the strongest correlation with the response was that of the positive outliers of V4 within 100 km (r = −0.40)."</p></div>
+
+  <h3>3.2 Outlier maps</h3>
+  <figure class="chart">
+    <img src="img/sdo/fig-outliermaps.webp" style="width: 808px" loading="lazy" alt="Six maps of the selected SDO variables over the grid: four red maps of positive outlier strengths and two blue maps of negative ones">
+    <figcaption><b>Positive and negative outlier maps</b>: each selected SDO variable at the grid cells. a to d, positive strengths (red); e and f, negative strengths (blue).</figcaption>
+  </figure>
+  <p><b>What it shows.</b> Each selected variable at the grid cells, as the prediction reads it: among the cells within radius b of a cell, the sum of z above +s (red maps) or below −s (blue maps). White means no outlier in that neighbourhood.</p>
+  <p><b>How to read it.</b> A coloured cell is not itself an outlier: it has outliers within b around it. That is why a small, isolated anomaly appears as a ring or a disc of radius b (the rings in map a, <code>V2_p_b40</code>) and a line of anomalies as a band. Each map has its own colour scale from 0, because a larger radius holds more cells and so larger sums: map a reaches about 11 and map c about 55. Compare places within a map, not the colours of two maps.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"Figure X maps the six selected outlier variables. Positive outliers of V4 within 100 km concentrate in a band from the west to the south of the study area. Each panel has its own scale, because the sums grow with the radius."</p></div>
+
+  <h3>3.3 Prediction maps</h3>
+  <figure class="chart">
+    <img src="img/sdo/fig-predictionplot.webp" style="width: 782px" loading="lazy" alt="Two maps of the predicted response on one colour scale: a, the SDO prediction; b, the baseline prediction">
+    <figcaption><b>Prediction maps</b>: a, the SDO prediction (X + SDO); b, the baseline (X only), on one colour scale.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> Two random forests fitted on all samples and applied to every grid cell. The selected variables are generated at the cells as they were at the samples; a cell lies at distance 0 from itself, so it is in its own neighbourhoods, and near the grid's edge a neighbourhood holds fewer cells. A new layer on the map holds <code>pred_base</code>, <code>pred_sdo</code> and <code>pred_diff</code>.</p>
+  <p><b>How to read it.</b> The two maps are much alike: the same two high spots east of the centre and in the south-east, the same low area south of the centre. Map a adds local detail around them. The maps show what the variables change, not that the change is right: that is the R² chart's question.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"The predictions with and without the outlier variables show the same main pattern (Figure X); the differences are local."</p></div>
+
+  <h3>3.4 Cross-validated R²</h3>
+  <figure class="chart">
+    <img src="img/sdo/fig-cvplot.webp" style="width: 595px" loading="lazy" alt="Bar charts of mean R² over folds with SD bars, baseline against X + SDO, for spatial-block folds and random folds">
+    <figcaption><b>Cross-validated R²</b>: a, spatial-block folds; b, random folds. Bars are the mean over five folds, lines ± SD.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> For each kind of fold, the baseline against X + SDO: mean R² over the folds (R² = 1 − SSE/SST) ± SD, with the change written above the bars as a percentage of the baseline. The selection is repeated in every fold.</p>
+  <div class="table-wrap"><table>
+    <tr><th>Folds</th><th class="n">R² baseline (SD)</th><th class="n">R² X + SDO (SD)</th><th class="n">RMSE baseline</th><th class="n">RMSE X + SDO</th></tr>
+    <tr><td>Spatial blocks</td><td class="n">0.224 (0.193)</td><td class="n">0.258 (0.204)</td><td class="n">0.635</td><td class="n">0.611</td></tr>
+    <tr><td>Random</td><td class="n">0.559 (0.090)</td><td class="n">0.572 (0.074)</td><td class="n">0.546</td><td class="n">0.540</td></tr>
+  </table></div>
+  <p><b>How to read it.</b> These gains are small, and shown as they are. They lie well inside the fold SDs (0.19 to 0.20 for spatial folds), and the table <b>Cross-validation by fold</b> shows that X + SDO is better in only 3 of 5 spatial folds:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Spatial fold</th><th class="n">Test samples</th><th class="n">R² baseline</th><th class="n">R² X + SDO</th></tr>
+    <tr><td>1</td><td class="n">84</td><td class="n">0.353</td><td class="n">0.413</td></tr>
+    <tr><td>2</td><td class="n">62</td><td class="n">0.221</td><td class="n">0.216</td></tr>
+    <tr><td>3</td><td class="n">64</td><td class="n">0.460</td><td class="n">0.490</td></tr>
+    <tr><td>4</td><td class="n">51</td><td class="n">−0.031</td><td class="n">0.201</td></tr>
+    <tr><td>5</td><td class="n">39</td><td class="n">0.115</td><td class="n">−0.032</td></tr>
+  </table></div>
+  <p>The result also moves with the settings. The tutorial guide lists these runs:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Setting</th><th class="n">Spatial folds</th><th class="n">Random folds</th></tr>
+    <tr><td>Tutorial (100 km blocks, B = 10)</td><td class="n">0.224 → 0.258</td><td class="n">0.559 → 0.572</td></tr>
+    <tr><td>Defaults (B = 80, 200 and 500 trees)</td><td class="n">0.229 → 0.265</td><td class="n">0.565 → 0.570</td></tr>
+    <tr><td>50 km blocks</td><td class="n">0.406 → 0.456</td><td class="n">–</td></tr>
+    <tr><td>150 km blocks</td><td class="n">0.090 → 0.224</td><td class="n">–</td></tr>
+    <tr><td>Tutorial's radii, B = 20</td><td class="n">0.224 → 0.272</td><td class="n">0.559 → 0.568</td></tr>
+    <tr><td>Public code's radii (20, 40, …, 200 km), B = 20</td><td class="n">0.224 → 0.255</td><td class="n">0.559 → 0.581</td></tr>
+  </table></div>
+  <p class="warn"><span class="label">What this means</span>The block size moves the baseline much more than the gain, which is why it must not be chosen from the result. With the defaults X + SDO is again better in 3 of 5 spatial folds. So on these simulated data, SDO's spatial gain cannot be told from noise.</p>
+  <div class="paper"><span class="label">In a paper</span><p>"In five-fold cross-validation with 100 km spatial blocks (the largest buffer radius, fixed in advance), adding the outlier variables changed the mean R² from 0.224 (SD 0.193) to 0.258 (SD 0.204), and in random folds from 0.559 (SD 0.090) to 0.572 (SD 0.074). The model with the variables was better in three of five spatial folds; the gain lies within the variation between folds."</p></div>
+
+  <h3>3.5 Observed vs predicted</h3>
+  <figure class="chart">
+    <img src="img/sdo/fig-scatter.webp" style="width: 383px" loading="lazy" alt="Scatter of the observed response against the out-of-fold predictions of X + SDO in spatial blocks, with the 1:1 line; R² = 0.405">
+    <figcaption><b>Observed vs predicted</b>: the out-of-fold predictions of X + SDO in the spatial-block folds, with the 1:1 line.</figcaption>
+  </figure>
+  <p><b>What it shows.</b> One point per sample: its observed y against the prediction made when its fold was left out. The printed R² (0.405) is pooled over all out-of-fold values.</p>
+  <p><b>How to read it.</b> The pooled R² (0.405; baseline 0.340) is not the mean over folds (0.258): the pooled value is computed once over all 300 predictions, the fold mean gives each fold the same weight. Say which one you report. Most samples lie in a cloud near 0, and the high observed values are under-predicted: the largest observation, about 5.3, is predicted below 1.</p>
+  <p>Export any figure from the <span class="ui">Chart</span> page as PDF, SVG or PNG; <span class="ui">Data CSV</span> saves the numbers behind it. <span class="ui">Export results</span> in the panel writes a report of the run (<a href="../guide.html#export">Part 1</a>).</p>
+
+  <h3>3.6 Reading the results together</h3>
+  <p>The outputs make one argument in four steps: outliers of the covariates around the samples hold information (<b>which</b> covariate, <b>which</b> sign, at <b>which</b> radius), the outlier maps show <b>where</b> they lie, the prediction maps show what they change, and the cross-validation says <b>whether</b> the change is an improvement. Read them in this order:</p>
+  <ol>
+    <li><b>Selected variables</b>: which covariates, signs and radii were kept, and the sign of r.</li>
+    <li><b>Outlier maps</b>: where the selected outliers lie in the study area.</li>
+    <li><b>Prediction maps</b>: what the selected variables change, and where.</li>
+    <li><b>Cross-validated R²</b>, with the table <b>Cross-validation by fold</b>: the gap between X + SDO and the baseline, and whether it holds in most folds.</li>
+    <li><b>Observed vs predicted</b>: which part of the range of y is predicted well.</li>
+  </ol>
+  <p class="note"><span class="label">What SDO is not</span>It does not look for outliers of the response, and it does not interpolate the response: the values of y at neighbouring samples are never used. It uses the same neighbourhoods as <a href="sda.html">SDA</a>, and summarises the outliers of the covariates in them where SDA takes quantiles. The outlier maps are not maps of outlier cells: a coloured cell has outliers within b around it.</p>
+
+  <h3>3.7 From the results to a manuscript</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Section</th><th>What to write</th><th>From Heterra</th></tr>
+    <tr><td>Methods</td><td>The definition of z and of the positive and negative strengths; the threshold s and the radii, with the rule that gave them; the selection rule and its settings; the folds, and the block size with the rule that fixed it</td><td>The settings of the run (in the exported report)</td></tr>
+    <tr><td>Results</td><td>Follow the order of the run: which outlier variables were selected, where they lie, what they change on the map, X + SDO against the baseline on left-out samples. Every finding has a number</td><td>Figures <b>Selected variables</b>, <b>Positive and negative outlier maps</b>, <b>Prediction maps</b>, <b>Cross-validated R²</b> and <b>Observed vs predicted</b>; tables <b>Selected variables</b> and <b>Cross-validation by fold</b></td></tr>
+    <tr><td>Discussion</td><td>Which covariates' outliers matter, of which sign and within about which radius; the size of the gain beside the variation between folds; how the result moves with the block size</td><td>Table <b>Selected variables</b> (the frequencies of the neighbouring radii); table <b>Cross-validation by fold</b>; further runs with other block sizes, given as a sensitivity check</td></tr>
+  </table></div>
+  <div class="warn"><span class="label">Common pitfalls</span>
+    <ul>
+      <li>Check how many grid cells lie inside the smallest radius. With too few cells the strengths are 0 at every sample.</li>
+      <li>Do not choose the block size, the radii or s from the cross-validation result. Fix them by a rule before the run.</li>
+      <li>Neighbouring radii describe almost the same neighbourhood, so their variables are much alike. Do not read one selected radius as an exact scale.</li>
+    </ul>
+  </div>
+
+  <h2 id="exercises" data-nav="4 Exercises"><span class="num">4</span>Exercises</h2>
+  <p>Exercises 1 to 3 use the example. Exercise 4 is for your own data.</p>
+
+  <div class="exercise">
+    <h4>Exercise 1<span class="level">Read</span></h4>
+    <p>Run the example with its settings. How many SDO variables are selected, and for which covariates is none selected? Which selected variable has the largest |r|, and what do its colour and its fill tell you?</p>
+    <details><summary>Answer</summary>
+      <p>Six, and none for V1 and V6. <code>V4_p_b100</code> has the largest |r| (r = −0.40). It is blue because r is negative, and solid because it is a positive outlier variable: the two legends are independent.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 2<span class="level">Explore</span></h4>
+    <p>Open the table <span class="ui">Cross-validation by fold</span> from the Outputs. In which spatial folds is X + SDO worse than the baseline? Which single fold contributes most of the gain in the mean? In how many random folds is X + SDO better?</p>
+    <details><summary>Answer</summary>
+      <p>Worse in folds 2 (0.216 against 0.221) and 5 (−0.032 against 0.115). Fold 4 rises from −0.031 to 0.201, far more than any other fold, so the mean gain of 0.034 rests largely on one fold of 51 samples. In the random folds X + SDO is better in three of five (folds 2, 3 and 4).</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 3<span class="level">Interpret</span></h4>
+    <p>A colleague tries blocks of 50, 100 and 150 km and writes: "With 150 km blocks SDO more than doubles the spatial R² (0.090 → 0.224), so we report that setting." What is wrong with this?</p>
+    <details><summary>Answer</summary>
+      <p>The block size was chosen from the result. The three sizes give baselines of 0.406, 0.224 and 0.090: the block size moves the baseline much more than the gain, and the large percentage comes from the small baseline. Fix the size by a rule before running (here: the largest buffer radius, 100 km), report that run with its fold SDs, and give the other sizes as a sensitivity check.</p>
+    </details>
+  </div>
+
+  <div class="exercise">
+    <h4>Exercise 4<span class="level">Your data</span></h4>
+    <p>Run SDO on your own samples and grid with the default settings (B = 80, 200 and 500 trees). Write three sentences for a results section: one on the variables selected (covariate, sign of the outlier, radius, sign of r), one on where the strongest of them lies on its outlier map, and one on the cross-validated R² of the baseline and of X + SDO in spatial folds.</p>
+    <details><summary>Checklist</summary>
+      <p>Are the samples and the grid in the same projected coordinate system, and the radii in its unit? Did any variable come out zero at every sample, and do you know why? Did you fix the block size before looking at the result? Did you give the SD over folds beside each mean R² and the number of folds in which X + SDO was better? Did you compare places within an outlier map, not colours between maps?</p>
+    </details>
+  </div>
+
+  <h2 id="references" data-nav="References">References</h2>
+  <ul class="refs">
+    <li>Ren, K., Song, Y. &amp; Yu, Q. (2026). Second-dimension outliers for spatial prediction. <i>International Journal of Geographical Information Science</i> 40(6): 1915–1942. <a href="https://doi.org/10.1080/13658816.2025.2580414">doi:10.1080/13658816.2025.2580414</a></li>
+    <li>Ren, K., Song, Y., Yang, X., Wang, X., Chen, M. &amp; Yu, Q. (2026). Spatial outliers as a pattern determinant for explaining heterogeneity. <i>International Journal of Geographical Information Science</i>: 1–23. <a href="https://doi.org/10.1080/13658816.2026.2682957">doi:10.1080/13658816.2026.2682957</a> (the public code and demo data)</li>
+    <li>Song, Y. (2022). The second dimension of spatial association. <i>International Journal of Applied Earth Observation and Geoinformation</i> 111: 102834. <a href="https://doi.org/10.1016/j.jag.2022.102834">doi:10.1016/j.jag.2022.102834</a></li>
+    <li>Song, Y. (2026). Generalized covariate field (GCF). <i>International Journal of Geographical Information Science</i> 40: 1–29. <a href="https://doi.org/10.1080/13658816.2026.2729719">doi:10.1080/13658816.2026.2729719</a> (the selection and the cross-validation)</li>
+    <li>R package gcf: <a href="https://CRAN.R-project.org/package=gcf">cran.r-project.org/package=gcf</a>. Heterra's results match gcf 0.1.1, ranger 0.18.0 and randomForest 4.7-1.2.</li>
+  </ul>
+
+  <div class="pager"></div>
+  <p class="guide-foot">Heterra guide, for version 1.6.0. © 2026 Yongze Song. Documentation and tutorial data: CC BY 4.0.</p>
+</main>
+</div>
+
+<dialog class="viewer" aria-label="Picture"><img src="" alt=""></dialog>
+<script src="guide.js"></script>
+</body>
+</html>
