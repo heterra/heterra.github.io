@@ -76,8 +76,9 @@ def main():
         "byCountry": places,
     }
     STATS.write_text(json.dumps(stats, indent=1) + "\n", encoding="utf-8")
-    by_country = sum(users for _, users in countries)
-    print(f"{sum(d['count'] for d in days)} users, {stats['countries']} countries, {len(days)} days, {len(places)} places on the map (total users summed by country: {by_country})")
+    # not named by_country: a local of that name would hide the function above for the whole of main()
+    summed = sum(users for _, users in countries)
+    print(f"{sum(d['count'] for d in days)} users, {stats['countries']} countries, {len(days)} days, {len(places)} places on the map (total users summed by country: {summed})")
 
 
 if __name__ == "__main__":
